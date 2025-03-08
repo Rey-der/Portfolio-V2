@@ -1,0 +1,22 @@
+@keyframes gradient-rotation {
+    0% {
+      border-color: var(--primary);
+      border-top-color: transparent;
+    }
+    33% {
+      border-color: var(--accent);
+      border-top-color: transparent;
+    }
+    66% {
+      border-color: var(--secondary);
+      border-top-color: transparent;
+    }
+    100% {
+      border-color: var(--primary);
+      border-top-color: transparent;
+    }
+  }
+  
+  .animate-gradient {
+    animation: gradient-rotation 2s ease infinite;
+  }
