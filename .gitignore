@@ -48,33 +48,3 @@ eslintcache
 # Temporary files
 tmp/
 temp/
-
-# Flutter / Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-android/
-ios/
-build/
-
-# macOS-Systemdateien
-.DS_Store
-
-# Node.js / Vite / npm
-node_modules/
-dist/
-.parcel-cache/
-.turbo/
-
-# Persönliche Dateien
-*.doc
-*.docx
-*.pdf
-~/Documents/
-~/Downloads/
-~/Pictures/
-~/Music/
-~/Movies/
