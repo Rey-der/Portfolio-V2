@@ -9,6 +9,7 @@ dist/
 .vite/
 .vitepress/
 *.cache
+build/
 
 # Environment variables
 .env
@@ -42,7 +43,7 @@ coverage/
 *.lcov
 
 # Linting and formatting
-eslintcache
+.eslintcache
 .prettier_cache/
 
 # Temporary files
