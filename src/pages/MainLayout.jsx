@@ -1,7 +1,8 @@
-import React, { Suspense, useEffect, useState, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { Suspense, useState, useRef, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useScroll } from '../context/ScrollContext';
+import ScrollURLUpdate from '../components/ScrollURLUpdate'; // Import ScrollURLUpdate
 
 // Import components without lazy loading for the main layout
 import Home from './Home';
@@ -13,12 +14,9 @@ const Guestbook = React.lazy(() => import('./Guestbook'));
 
 const MainLayout = () => {
   const location = useLocation();
-  const { scrollToSection, registerSection } = useScroll();
-  const [visibleSections, setVisibleSections] = useState(['home']);
-  const currentPathRef = useRef(location.pathname);
-  
-  // Section refs
-  const homeRef = useRef(null);
+  const navigate = useNavigate();
+  const { registerSection, setActiveSection } = useScroll();
+  const [visibleSections, setVisibleSections] = useState(['home', 'projects', 'about', 'guestbook']);
   
   // Helper to check if actual DOM elements for sections exist
   const checkSectionElements = useCallback(() => {
@@ -26,51 +24,14 @@ const MainLayout = () => {
     const found = sections.filter(id => document.getElementById(id));
     return found;
   }, []);
-  
-  // Setup initial sections based on URL
-  useEffect(() => {
-    const path = location.pathname.replace('/', '');
-    let initialSections = ['home'];
-    
-    // Add appropriate sections based on URL
-    switch (path) {
-      case 'projects':
-        initialSections = ['home', 'projects'];
-        break;
-      case 'about':
-        initialSections = ['home', 'projects', 'about'];
-        break;
-      case 'guestbook':
-        initialSections = ['home', 'projects', 'about', 'guestbook'];
-        break;
-      default:
-        // On homepage, load all sections for smooth scrolling
-        initialSections = ['home', 'projects', 'about', 'guestbook'];
-    }
-    
-    setVisibleSections(initialSections);
-    
-    // Scroll to the right section after rendering
-    if (path && path !== '') {
-      // Add a short delay to ensure components are rendered
-      setTimeout(() => scrollToSection(path), 100);
-    }
-  }, [scrollToSection, location.pathname, checkSectionElements]);
-  
-  // Register home section
-  useEffect(() => {
-    if (homeRef.current) {
-      return registerSection('home', homeRef);
-    }
-  }, [registerSection]);
-  
-  // Track current path
-  useEffect(() => {
-    currentPathRef.current = location.pathname;
-  }, [location.pathname]);
 
-  // Add CSS to fix triangle animation and ensure clickable elements
-  useEffect(() => {
+  // Simple registration function that delegates to the ScrollContext
+  const registerWithURL = useCallback((sectionId, ref) => {
+    return registerSection(sectionId, ref);
+  }, [registerSection]);
+
+  // Add CSS for layout and triangle animation
+  React.useEffect(() => {
     const style = document.createElement('style');
     style.id = 'mainLayoutStyles';
     style.textContent = `
@@ -83,6 +44,7 @@ const MainLayout = () => {
       /* Section interaction */
       #home, #projects, #about, #guestbook {
         pointer-events: auto;
+        scroll-margin-top: 60px; /* Help with intersection observer */
       }
       
       /* Navigation elements */
@@ -122,8 +84,9 @@ const MainLayout = () => {
 
   return (
     <div className="sections-container relative">
-      {/* Home is always loaded */}
-      <Home />
+      <ScrollURLUpdate /> {/* Add ScrollURLUpdate component here */}
+      {/* Home is always loaded - pass the registerWithURL function */}
+      <Home registerWithURL={registerWithURL} />
       
       {/* Other sections load with non-blocking fallbacks */}
       {visibleSections.includes('projects') && (
@@ -132,7 +95,7 @@ const MainLayout = () => {
             <LoadingSpinner size="lg" color="primary" className="mx-auto my-10" aria-label="Loading Projects section" />
           </div>
         }>
-          <Projects />
+          <Projects registerWithURL={registerWithURL} />
         </Suspense>
       )}
 
@@ -142,7 +105,7 @@ const MainLayout = () => {
             <LoadingSpinner size="lg" color="primary" className="mx-auto my-10" aria-label="Loading About section" />
           </div>
         }>
-          <About />
+          <About registerWithURL={registerWithURL} />
         </Suspense>
       )}
       
@@ -152,7 +115,7 @@ const MainLayout = () => {
             <LoadingSpinner size="lg" color="primary" className="mx-auto my-10" aria-label="Loading Guestbook section" />
           </div>
         }>
-          <Guestbook />
+          <Guestbook registerWithURL={registerWithURL} />
         </Suspense>
       )}
     </div>

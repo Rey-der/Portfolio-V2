@@ -1,34 +1,77 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import AnimatedSection from '../components/AnimatedSection';
-import useSectionObserver from '../hooks/useSectionObserver';
-import { useScroll } from '../context/ScrollContext';
+import { useInView } from 'react-intersection-observer';
 import useProgressiveLoading from '../hooks/useProgressiveLoading';
 import useMousePosition from '../utils/useMousePosition';
 import useTriangleAnimation from '../animations/AnimatedTriangle';
 import useDeviceDetection from '../utils/useDeviceDetection';
 
-const Home = () => {
-    const [sectionRef, inView] = useSectionObserver('home', '/');
-    const { registerSection } = useScroll();
+const Home = ({ registerWithURL }) => {
+    // Replace useSectionObserver with simpler ref and inView check
+    const sectionRef = useRef(null);
+    const { ref: inViewRef, inView } = useInView({ 
+      threshold: 0.1,
+      // Adding a better margin for detection
+      rootMargin: '0px 0px -10% 0px'
+    });
+    
+    // Combine refs
+    const setRefs = element => {
+      // Set the sectionRef for registration
+      sectionRef.current = element;
+      // Set the inViewRef for animation
+      inViewRef(element);
+      
+      // Add debug log when ref is set
+      if (element) {
+        console.log("Home section element has been set in ref");
+      }
+    };
+    
     const mousePosition = useMousePosition();
     const isMobile = useDeviceDetection();
     
-    // Get triangle position from our new animation hook
+    // Get triangle position from our animation hook
     const trianglePos = useTriangleAnimation(inView, mousePosition, isMobile);
        
-    // Register this section with the scroll context
+    // Register this section with the new URL-aware registration function
     useEffect(() => {
-      const unregister = registerSection('home', sectionRef);
-      return () => {
-        if (unregister) unregister();
-      };
-    }, [registerSection, sectionRef]);
+      // ADDED: Debug logging
+      console.log("Home component attempting registration");
+      
+      if (sectionRef.current && registerWithURL) {
+        // ADDED: Debug logging
+        console.log("Home section ref exists, registering with URL");
+        
+        // We need to ensure proper cleanup
+        const cleanup = registerWithURL('home', sectionRef);
+        
+        return () => {
+          if (typeof cleanup === 'function') {
+            console.log("Cleaning up Home section URL observer");
+            cleanup();
+          }
+        };
+      } else {
+        console.warn("Home section ref doesn't exist yet or registerWithURL not provided");
+      }
+    }, [registerWithURL]);
     
     // Preload the next section
     useProgressiveLoading(['/src/pages/Projects.jsx']);
 
     return (
-        <section ref={sectionRef} id="home" className="min-h-screen pb-16 relative overflow-hidden">
+        <section 
+            ref={setRefs} 
+            id="home" 
+            className="min-h-screen pb-16 relative overflow-hidden"
+            // Add styling to help with Intersection Observer detection
+            style={{ 
+                scrollMarginTop: '60px',  // Adjust based on your header height
+                position: 'relative',     // Ensure position context
+                zIndex: 1                // Set a stacking context for better detection
+            }}
+        >
             <div className="flex flex-col items-center justify-center h-full min-h-[80vh]">
                 {/* Decorative Triangle - fixed positioning for better centering */}
                 <div 

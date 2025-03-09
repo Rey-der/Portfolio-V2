@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const ScrollContext = createContext();
@@ -11,6 +11,7 @@ export const ScrollProvider = ({ children }) => {
   const [lastScrollY, setLastScrollY] = useState(0);
   const [scrollDirection, setScrollDirection] = useState(null); // 'up' or 'down'
   const location = useLocation();
+  const isProgrammaticScrollRef = useRef(false);
   
   // Use ref for sections to avoid re-renders
   const sectionsRef = useRef({});
@@ -23,166 +24,174 @@ export const ScrollProvider = ({ children }) => {
     console.log("Currently registered sections:", Object.keys(sectionsRef.current));
   }, []);
   
+
+  // Intersection Observer for section visibility
+useEffect(() => {
+  // Don't setup observers during programmatic scrolling
+  if (isProgrammaticScrollRef.current) return;
+  
+  const observerOptions = { 
+    threshold: [0.1, 0.2, 0.3, 0.4, 0.5],
+    rootMargin: '-5% 0px -40% 0px'
+  };
+  
+  const sectionObservers = {};
+  const sections = registeredSections;
+  
+  const handleIntersection = (entries) => {
+    if (isProgrammaticScrollRef.current) return;
+    
+    // Find the most visible section
+    let bestSection = null;
+    let bestVisibility = 0;
+    
+    entries.forEach(entry => {
+      const sectionId = entry.target.id;
+      const intersectionRatio = entry.intersectionRatio;
+      
+      if (entry.isIntersecting && intersectionRatio > bestVisibility) {
+        bestVisibility = intersectionRatio;
+        bestSection = sectionId;
+      }
+    });
+    
+    // Update active section if we found a good candidate
+    if (bestSection) {
+      setActiveSection(bestSection);
+    }
+  };
+  
+  // Create observer
+  const observer = new IntersectionObserver(handleIntersection, observerOptions);
+  
+  // Observe all registered sections
+  sections.forEach(sectionId => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      observer.observe(element);
+      sectionObservers[sectionId] = true;
+    }
+  });
+  
+  // Cleanup observers
+  return () => {
+    observer.disconnect();
+  };
+}, [registeredSections, isProgrammaticScrollRef.current]);
+
   // Track scroll position and direction
   useEffect(() => {
     const handleScroll = () => {
+      if (isProgrammaticScrollRef.current) return;
+      
       const currentScrollY = window.scrollY;
       setScrollY(currentScrollY);
       
       // Determine scroll direction
-      if (currentScrollY > lastScrollY) {
-        setScrollDirection('down');
-      } else if (currentScrollY < lastScrollY) {
-        setScrollDirection('up');
-      }
-      
+      setScrollDirection(currentScrollY > lastScrollY ? 'down' : 'up');
       setLastScrollY(currentScrollY);
     };
     
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
+    // Add scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    
+    // Clean up the event listener
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [lastScrollY, isProgrammaticScrollRef.current]);
   
   // Enhanced section registration that handles both refs and direct DOM elements
   const registerSection = useCallback((sectionId, ref) => {
-    if (!sectionId) {
-      console.warn('Attempted to register section without ID');
-      return null;
-    }
-    
-    // Store in ref to prevent re-renders
     sectionsRef.current[sectionId] = ref;
     
-    // Update registered sections array for debugging
-    setRegisteredSections(prev => {
-      if (!prev.includes(sectionId)) {
-        return [...prev, sectionId];
+    setRegisteredSections(prevSections => {
+      if (!prevSections.includes(sectionId)) {
+        return [...prevSections, sectionId];
       }
-      return prev;
+      return prevSections;
     });
     
-    console.log(`✅ Section registered: ${sectionId}`);
-    
-    // Return unregister function
+    // Return a cleanup function
     return () => {
-      console.log(`❌ Section unregistered: ${sectionId}`);
-      if (sectionsRef.current[sectionId]) {
-        delete sectionsRef.current[sectionId];
-        setRegisteredSections(prev => prev.filter(id => id !== sectionId));
-      }
+      delete sectionsRef.current[sectionId];
+      setRegisteredSections(prevSections => prevSections.filter(id => id !== sectionId));
     };
   }, []);
   
-  // Enhanced scrollToSection with multiple fallback strategies
+  let scrollSuccess = false;
+  
   const scrollToSection = useCallback((sectionId) => {
-    console.log(`🔍 Attempting to scroll to section: ${sectionId}`);
+    scrollSuccess = false;
     
-    // First try: Using the registered ref
-    if (sectionsRef.current[sectionId] && sectionsRef.current[sectionId].current) {
-      console.log(`✅ Found section by ref: ${sectionId}`);
-      sectionsRef.current[sectionId].current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-      return true;
-    }
-    
-    // Second try: Direct DOM lookup by ID
-    const elementById = document.getElementById(sectionId);
-    if (elementById) {
+    // First try: Look by ID
+    const element = document.getElementById(sectionId);
+    if (element) {
       console.log(`✅ Found section by ID: ${sectionId}`);
-      elementById.scrollIntoView({
+      element.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
-      return true;
+      scrollSuccess = true;
     }
     
-    // Special case for home section
-    if (sectionId === 'home') {
-      console.log('✅ Special case: scrolling to top for home section');
+    // Second try: Look by ref
+    if (!scrollSuccess && sectionsRef.current[sectionId]) {
+      console.log(`✅ Found section by ref: ${sectionId}`);
+      const ref = sectionsRef.current[sectionId];
+      if (ref && ref.current) {
+        ref.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+        scrollSuccess = true;
+      }
+    }
+    
+    if (!scrollSuccess && sectionId === 'home') {
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
-      return true;
+      scrollSuccess = true;
     }
     
     // Third try: Look by data attribute
-    const elementByData = document.querySelector(`[data-section="${sectionId}"]`);
-    if (elementByData) {
-      console.log(`✅ Found section by data attribute: ${sectionId}`);
-      elementByData.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-      return true;
+    if (!scrollSuccess) {
+      const elementByData = document.querySelector(`[data-section="${sectionId}"]`);
+      if (elementByData) {
+        console.log(`✅ Found section by data attribute: ${sectionId}`);
+        elementByData.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+        scrollSuccess = true;
+      }
     }
     
     // Fourth try: Look by class that often identifies sections
-    const elementByClass = document.querySelector(`.section-${sectionId}`);
-    if (elementByClass) {
-      console.log(`✅ Found section by class: ${sectionId}`);
-      elementByClass.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
-      return true;
+    if (!scrollSuccess) {
+      const elementByClass = document.querySelector(`.section-${sectionId}`);
+      if (elementByClass) {
+        console.log(`✅ Found section by class: ${sectionId}`);
+        elementByClass.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+        scrollSuccess = true;
+      }
     }
-    
-    // If all else fails, log the failure and list available sections
-    console.warn(`❌ Section "${sectionId}" not found or ref not attached`);
-    logSections();
-    return false;
   }, [logSections]);
 
   // Scroll to top helper
   const scrollToTop = useCallback((smooth = true) => {
+    isProgrammaticScrollRef.current = true;
     window.scrollTo({
       top: 0,
-      behavior: smooth ? 'smooth' : 'auto'
+      behavior: smooth ? 'smooth' : 'instant'
     });
+    isProgrammaticScrollRef.current = false;
   }, []);
-
-  // Update active section when location changes
-  useEffect(() => {
-    // Map paths to section IDs
-    const pathToSection = {
-      '/': 'home',
-      '/projects': 'projects',
-      '/about': 'about',
-      '/guestbook': 'guestbook',
-      '/contact': 'contact'
-    };
-    
-    const path = location.pathname;
-    const sectionId = pathToSection[path] || 'home';
-    setActiveSection(sectionId);
-    
-    // Optional: Remove hash from URL to avoid conflicts with our scroll system
-    if (location.hash && window.history.replaceState) {
-      window.history.replaceState(
-        null, 
-        document.title, 
-        window.location.pathname + window.location.search
-      );
-    }
-    
-    // Force DOM-based section registration on route change
-    setTimeout(() => {
-      // Attempt to find and register any sections that might not be registered yet
-      Object.keys(pathToSection).forEach(path => {
-        const sectionId = pathToSection[path].replace('/', '');
-        if (sectionId && !sectionsRef.current[sectionId]) {
-          const element = document.getElementById(sectionId);
-          if (element) {
-            // Add data-section attribute to help with lookups
-            element.setAttribute('data-section', sectionId);
-          }
-        }
-      });
-    }, 300);
-  }, [location.pathname]);
 
   return (
     <ScrollContext.Provider 
@@ -195,7 +204,7 @@ export const ScrollProvider = ({ children }) => {
         scrollY,
         scrollDirection,
         registeredSections,
-        // Provide a safe getter for sections that won't return references to mutable state
+        isProgrammaticScroll: () => isProgrammaticScrollRef.current,
         getSections: () => ({...sectionsRef.current})
       }}
     >
@@ -203,3 +212,5 @@ export const ScrollProvider = ({ children }) => {
     </ScrollContext.Provider>
   );
 };
+
+export default ScrollContext;

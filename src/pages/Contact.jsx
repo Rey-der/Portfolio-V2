@@ -1,26 +1,46 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import useSectionObserver from '../hooks/useSectionObserver';
-import { useScroll } from '../context/ScrollContext';
+import { useInView } from 'react-intersection-observer';
 import useProgressiveLoading from '../hooks/useProgressiveLoading';
 import useDeviceDetection from '../utils/useDeviceDetection';
 import ContactForm from '../components/ContactForm';
 import ContactInfo from '../components/ContactInfo';
 
-const Contact = () => {
+const Contact = ({ registerWithURL }) => {
     const location = useLocation();
     const initialRenderRef = useRef(true);
     const [showContent, setShowContent] = useState(false);
     
-    const [sectionRef, inView] = useSectionObserver('contact', '/contact');
-    const { registerSection } = useScroll();
+    // Create a simple ref for section registration
+    const sectionRef = useRef(null);
+    
+    // Separate animation tracking with useInView if needed
+    const { ref: animationRef, inView } = useInView({
+      threshold: 0.1,
+      triggerOnce: false
+    });
+    
+    // Combine refs for both registration and animation
+    const setRefs = element => {
+      sectionRef.current = element;
+      if (typeof animationRef === 'function') {
+        animationRef(element);
+      }
+    };
     
     // Add device detection for potentially responsive adjustments
     const isMobile = useDeviceDetection();
     
     // Preload Guestbook section
     useProgressiveLoading(['/src/pages/GuestBook.jsx']);
+    
+    // Register section with the new URL-aware registration function
+    useEffect(() => {
+      if (sectionRef.current && registerWithURL) {
+        return registerWithURL('contact', sectionRef);
+      }
+    }, [registerWithURL]);
     
     // Handle icon visibility with the new system
     useEffect(() => {
@@ -47,16 +67,6 @@ const Contact = () => {
             return () => clearTimeout(timer);
         }
     }, []);
-    
-    // Register with scroll context
-    useEffect(() => {
-        if (sectionRef && sectionRef.current) {
-            const unregister = registerSection('contact', sectionRef);
-            return () => {
-                if (unregister) unregister();
-            };
-        }
-    }, [registerSection, sectionRef]);
 
     // Control content visibility based on route
     useEffect(() => {
@@ -101,7 +111,7 @@ const Contact = () => {
     };
 
     if (!showContent) {
-        return <div ref={sectionRef} id="contact" className="min-h-screen"></div>;
+        return <div ref={setRefs} id="contact" className="min-h-screen"></div>;
     }
 
     return (
@@ -116,7 +126,7 @@ const Contact = () => {
             />
             
             <section 
-                ref={sectionRef} 
+                ref={setRefs} 
                 id="contact" 
                 className="min-h-screen py-16 px-4 relative"
             >

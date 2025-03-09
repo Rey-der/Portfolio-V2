@@ -79,10 +79,17 @@ const Footer = () => {
                                 onClick={() => handleNavigation('contact', '/contact')}
                                 className="flex items-center justify-center md:justify-start hover:text-primary transition-colors group"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="icon-svg mail-icon h-5 w-5 mr-2 group-hover:animate-bounce" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                                </svg>
+                                <div className="relative w-5 h-5 mr-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" 
+                                        className="icon-svg mail-icon h-5 w-5 transform transition-transform group-hover:animate-bounce" 
+                                        viewBox="0 0 20 20" 
+                                        fill="currentColor"
+                                        style={{ willChange: 'transform', position: 'absolute' }}
+                                    >
+                                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                                    </svg>
+                                </div>
                                 Get in touch with me
                             </Link>
                         </div>

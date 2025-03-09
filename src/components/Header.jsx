@@ -4,7 +4,6 @@ import { useTheme } from '../utils/useTheme';
 import ThemeToggle from './ThemeToggle';
 import { trapFocus } from '../utils/accessibility';
 import { useScroll } from '../context/ScrollContext';
-import { initIconVisibility } from '../utils/iconVisibility';
 
 const Header = () => {
   // State and hooks
@@ -13,7 +12,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const menuRef = useRef(null);
-  const { activeSection, scrollToSection } = useScroll();
+  const { activeSection, scrollToSection, setActiveSection } = useScroll();
   
   // Get icon visibility state with CSS approach instead of React state
   const [iconsVisible, setIconsVisible] = useState(false);
@@ -87,33 +86,107 @@ const Header = () => {
     };
   }, [isMenuOpen]);
 
-  // Navigation handler with optimized routing
+  // Simplified and reliable navigation handler
   const handleNavigation = (sectionId, path) => {
     setIsMenuOpen(false);
-    const isSamePage = location.pathname === path;
+    console.log(`Navigation triggered: ${sectionId}, path: ${path}`);
     
-    // Special case for home & contact
-    if (sectionId === 'home' || sectionId === 'contact') {
-      navigate(path);
-      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+    // Remove focus from the clicked element
+    setTimeout(() => {
+      document.activeElement.blur();
+    }, 150);
+    
+    // Contact always goes to separate page
+    if (sectionId === 'contact') {
+      console.log('Contact navigation: navigating to separate page');
+      
+      // Navigate to contact page
+      navigate('/contact');
+      
+      // After navigation completes, apply smooth scrolling
+      setTimeout(() => {
+        // First immediate scroll to top for responsiveness
+        window.scrollTo(0, 0);
+        console.log('Contact page: initial scroll reset');
+        
+        // Then find the main content element for smooth scrolling
+        const contactElement = document.getElementById('main-content') || document.getElementById('contact');
+        if (contactElement) {
+          console.log('Found contact page element, smooth scrolling into view');
+          contactElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          // Fallback to smooth window scroll
+          console.log('Contact page: using fallback smooth scroll');
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        }
+      }, 200);
+      
       return;
     }
     
-    // For other sections
-    if (!isSamePage) {
-      navigate(path);
+    // For other sections (projects, about, guestbook)
+    
+    // Step 1: If not on main site, navigate there first
+    if (location.pathname === '/contact') {
+      console.log(`Navigating from contact to section: ${sectionId}`);
+      navigate('/');
+      
+      // Delay scroll until navigation completes
       setTimeout(() => {
+        console.log(`Looking for element #${sectionId}`);
         const element = document.getElementById(sectionId);
-        element ? element.scrollIntoView({ behavior: 'smooth' }) : scrollToSection(sectionId);
-      }, 150);
+        if (element) {
+          console.log(`Found element #${sectionId}, scrolling`);
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setActiveSection(sectionId);
+        } else {
+          console.log(`Element #${sectionId} not found, using scrollToSection`);
+          scrollToSection(sectionId);
+        }
+      }, 300); // Longer timeout for navigation from separate page
+      return;
+    }
+    
+    // Step 2: If already on main site, just scroll to section
+    console.log(`Already on main site, looking for element #${sectionId}`);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      console.log(`Found element #${sectionId}, scrolling`);
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveSection(sectionId);
     } else {
-      const element = document.getElementById(sectionId);
-      element ? element.scrollIntoView({ behavior: 'smooth' }) : scrollToSection(sectionId);
+      console.log(`Element #${sectionId} not found, using scrollToSection`);
+      scrollToSection(sectionId);
     }
   };
    
-  // Active section helper
-  const isActive = (sectionId) => activeSection === sectionId ? 'text-primary font-medium' : '';
+  // Active section helper based on URL rather than state
+  const isActive = (sectionId) => {
+    // Special case for contact page
+    if (sectionId === 'contact' && location.pathname === '/contact') {
+      return 'text-primary font-medium';
+    }
+    
+    // For main site sections on the home page
+    if (location.pathname === '/' && sectionId !== 'contact') {
+      // If we're at root path, use activeSection for the sections on the page
+      // This allows scrolled sections to be highlighted
+      if (activeSection === sectionId) {
+        return 'text-primary font-medium';
+      }
+    }
+    
+    // For other direct routes (if pathname includes the sectionId)
+    if (location.pathname.includes(sectionId) && sectionId !== 'home') {
+      return 'text-primary font-medium';
+    }
+    
+    // No highlight by default
+    return '';
+  };
 
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-white bg-opacity-90 dark:bg-dark-background dark:bg-opacity-90 shadow-sm transition-colors duration-300">

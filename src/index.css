@@ -185,6 +185,11 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+
+  .btn-secondary:hover svg, 
+.btn-secondary:hover span {
+  color: #1f2937; /* dark gray for contrast on white background */
+}
   
   .animated-section.hidden {
     opacity: 0;
@@ -215,4 +220,26 @@ body {
   0% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.4); }
   70% { box-shadow: 0 0 0 10px rgba(var(--primary-rgb), 0); }
   100% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0); }
+}
+
+/* Replace the existing singleIconBounce keyframes with this */
+@keyframes singleIconBounce {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-25%); }
+  100% { transform: translateY(0); }
+}
+
+.mail-icon.group-hover\:animate-bounce {
+  animation: none; /* No animation by default */
+}
+
+.group:hover .mail-icon.group-hover\:animate-bounce {
+  animation: singleIconBounce 0.7s ease-in-out; /* Animation only on hover */
+}
+
+/* Ensure icons are always visible in specific contexts */
+.icons-loading .mail-icon,
+.mail-icon {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
