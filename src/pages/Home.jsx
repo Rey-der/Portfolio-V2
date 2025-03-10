@@ -5,32 +5,21 @@ import useProgressiveLoading from '../hooks/useProgressiveLoading';
 import useMousePosition from '../utils/useMousePosition';
 import useTriangleAnimation from '../animations/AnimatedTriangle';
 import useDeviceDetection from '../utils/useDeviceDetection';
-// Keep this for backward compatibility
 import { homeText } from '../data/homeData';
-// Add these for language support
 import { getHomeText } from '../data/homeData';
 import { useLanguage } from '../context/LanguageContext';
 
 const Home = ({ registerWithURL }) => {
-    // Replace useSectionObserver with simpler ref and inView check
     const sectionRef = useRef(null);
     const { ref: inViewRef, inView } = useInView({ 
       threshold: 0.1,
-      // Adding a better margin for detection
       rootMargin: '0px 0px -10% 0px'
     });
     
     // Combine refs
     const setRefs = element => {
-      // Set the sectionRef for registration
       sectionRef.current = element;
-      // Set the inViewRef for animation
       inViewRef(element);
-      
-      // Add debug log when ref is set
-      if (element) {
-        console.log("Home section element has been set in ref");
-      }
     };
     
     const mousePosition = useMousePosition();
@@ -43,16 +32,14 @@ const Home = ({ registerWithURL }) => {
     const { currentLanguage } = useLanguage();
     const currentHomeText = getHomeText(currentLanguage) || homeText;
        
-    // Register this section with the new URL-aware registration function
+    // Register this section with the new URL registration function
     useEffect(() => {
       // ADDED: Debug logging
       console.log("Home component attempting registration");
       
       if (sectionRef.current && registerWithURL) {
-        // ADDED: Debug logging
+        // ADDED: More Debug logging
         console.log("Home section ref exists, registering with URL");
-        
-        // We need to ensure proper cleanup
         const cleanup = registerWithURL('home', sectionRef);
         
         return () => {
@@ -74,7 +61,6 @@ const Home = ({ registerWithURL }) => {
             ref={setRefs} 
             id="home" 
             className="min-h-screen pb-16 relative overflow-hidden"
-            // Add styling to help with Intersection Observer detection
             style={{ 
                 scrollMarginTop: '60px',  // Adjust based on your header height
                 position: 'relative',     // Ensure position context

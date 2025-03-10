@@ -7,9 +7,7 @@ import useDeviceDetection from '../utils/useDeviceDetection';
 import GuestbookForm from '../components/GuestbookForm';
 import GuestbookEntryList from '../components/GuestbookEntryList';
 import ScrollToTopButton from '../utils/ScrollToTopButton';
-// Keep this for backward compatibility
 import { guestbookText } from '../data/guestbookData';
-// Add these for language support
 import { getGuestbookText } from '../data/guestbookData';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -38,15 +36,11 @@ const Guestbook = ({ registerWithURL }) => {
   // Preload the Home section for circular navigation
   useProgressiveLoading(['/src/pages/Home.jsx']);
 
-  // Enhanced scroll to top function with fallback
+  // Enhanced scroll to top
   const handleScrollToTop = () => {
     try {
-      // First try using the context's scrollToSection
       scrollToSection('home');
-      
-      // Add a fallback in case the section isn't found
       setTimeout(() => {
-        // If we're still at the bottom after a short delay, use window.scrollTo
         const scrollY = window.scrollY;
         const documentHeight = document.documentElement.scrollHeight;
         const windowHeight = window.innerHeight;

@@ -10,10 +10,9 @@ import { useThemeStore } from './utils/themeStore';
 const MainLayout = lazy(() => import('./pages/MainLayout'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
-// THIS IS THE MISSING PART - properly define Contact component with lazy loading
 const Contact = lazy(() => 
   new Promise(resolve => {
-    // Add a small delay to ensure styles are loaded before component renders
+    // small delay to ensure styles are loaded before component renders
     setTimeout(() => {
       import('./pages/Contact').then(resolve);
     }, 300);
@@ -95,7 +94,6 @@ const router = createBrowserRouter([
 });
 
 function App() {
-  // Add app-level icon styling
   useEffect(() => {
     // Add global class to control icon visibility
     document.body.classList.add('icons-loading');

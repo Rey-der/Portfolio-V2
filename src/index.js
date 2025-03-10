@@ -30,7 +30,6 @@ const RootLayout = () => {
     
     // Detect when page is fully loaded including assets
     window.addEventListener('load', () => {
-      // Remove preload class once everything is ready
       document.body.classList.remove('preload');
       setPageReady(true);
     });
@@ -43,12 +42,11 @@ const RootLayout = () => {
     };
   }, []);
   
-  // Your existing theme code
   useEffect(() => {
     console.log('🌓 Setting up theme system listener');
     const unsubscribe = listenToSystemThemeChanges();
     
-    // Apply theme on first render
+    // Apply theme
     const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const savedTheme = localStorage.getItem('theme-storage');
     if (!savedTheme && isDarkMode) {
@@ -68,7 +66,6 @@ const RootLayout = () => {
   
   // Your existing interaction fix
   useEffect(() => {
-    // Add a global pointer-events fix
     const style = document.createElement('style');
     style.id = 'global-interaction-fix';
     style.textContent = `

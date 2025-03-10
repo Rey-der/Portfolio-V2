@@ -4,7 +4,7 @@ import ProjectCard from '../components/ProjectCard';
 import { useInView } from 'react-intersection-observer';
 import useProgressiveLoading from '../hooks/useProgressiveLoading';
 import { projectsData, projectCategories, projectsUIText, getProjectsData, getProjectCategories, getProjectsUIText } from '../data/projectsData';
-import { useLanguage } from '../context/LanguageContext'; // Import useLanguage hook
+import { useLanguage } from '../context/LanguageContext'; 
 
 const Projects = ({ registerWithURL }) => {
     const [activeFilter, setActiveFilter] = useState('all');

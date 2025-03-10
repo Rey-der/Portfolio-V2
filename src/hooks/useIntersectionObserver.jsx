@@ -19,7 +19,6 @@ const useIntersectionObserver = (options = {}) => {
       setEntry(entry);
       setIntersectionRatio(entry.intersectionRatio);
       
-      // Execute callback if provided
       if (callbackRef.current && typeof callbackRef.current === 'function') {
         callbackRef.current(entry);
       }
@@ -46,10 +45,8 @@ const useIntersectionObserver = (options = {}) => {
     };
   }, [options.root, options.rootMargin, options.threshold, options.triggerOnce]);
 
-  // Provide a method to manually update the ref
   const updateRef = useCallback((node) => {
     if (ref.current) {
-      // Clean up old observer
       observer.unobserve(ref.current);
     }
     

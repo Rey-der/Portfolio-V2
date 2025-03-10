@@ -11,11 +11,10 @@ const NotFound = () => {
     navigate('/');
   };
   
-  // Handler for section navigation with improved scrolling
+  // section navigation with improved scrolling
   const handleSectionNavigation = (sectionId) => {
     navigate('/');
     
-    // More robust approach with multiple attempts
     const attemptScroll = (attempts = 0) => {
       if (attempts > 5) return; // Give up after 5 attempts
       
@@ -24,13 +23,11 @@ const NotFound = () => {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth' });
         } else {
-          // Element not found yet, try again
           attemptScroll(attempts + 1);
         }
-      }, attempts === 0 ? 500 : 300); // Longer initial wait, shorter retries
+      }, attempts === 0 ? 500 : 300);
     };
     
-    // Start the attempt sequence
     attemptScroll();
   };
   
@@ -68,7 +65,7 @@ Available routes:
     
     navigator.clipboard.writeText(errorText).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+      setTimeout(() => setCopied(false), 2000);
     });
   };
   
@@ -78,11 +75,10 @@ Available routes:
     { name: 'Projects', path: '/', id: 'projects' },
     { name: 'About', path: '/', id: 'about' },
     { name: 'Guestbook', path: '/', id: 'guestbook' },
-    { name: 'Contact', path: '/contact', id: null } // Contact has its own page
+    { name: 'Contact', path: '/contact', id: null } 
   ];
   
   return (
-    // Page background with fixed positioning for perfect centering
     <div className="fixed inset-0 flex items-center justify-center text-gray-800 dark:text-gray-200" 
          style={{ backgroundColor: 'var(--background)' }}>
       {/* VS Code Window with styling */}
@@ -207,8 +203,7 @@ Available routes:
   );
 };
 
-// Make sure this page doesn't display site header/footer
 NotFound.displayName = 'NotFoundPage';
-NotFound.noLayout = true; // Flag for layout system to skip header/footer
+NotFound.noLayout = true;
 
 export default NotFound;

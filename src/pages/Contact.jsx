@@ -6,9 +6,7 @@ import useProgressiveLoading from '../hooks/useProgressiveLoading';
 import useDeviceDetection from '../utils/useDeviceDetection';
 import ContactForm from '../components/ContactForm';
 import ContactInfo from '../components/ContactInfo';
-// Keep this for backward compatibility
 import { contactText } from '../data/contactData';
-// Add these for language support
 import { getContactText } from '../data/contactData';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -44,7 +42,6 @@ const Contact = ({ registerWithURL }) => {
     // Preload Guestbook section
     useProgressiveLoading(['/src/pages/GuestBook.jsx']);
     
-    // Register section with the new URL-aware registration function
     useEffect(() => {
       if (sectionRef.current && registerWithURL) {
         return registerWithURL('contact', sectionRef);
@@ -53,18 +50,15 @@ const Contact = ({ registerWithURL }) => {
     
     // Handle icon visibility with the new system
     useEffect(() => {
-        // Get contact section
         const contactSection = document.getElementById('contact');
         if (contactSection) {
-            // First mark as loading to prevent flicker
-            contactSection.classList.add('icons-loading');
-            
+            contactSection.classList.add('icons-loading');        
             // After a delay, show icons with a smooth transition
             const timer = setTimeout(() => {
                 contactSection.classList.remove('icons-loading');
                 contactSection.classList.add('icons-ready');
                 
-                // Find all SVGs in this section and add icon-svg class
+                // Find all SVGs/icon-svg class
                 const icons = contactSection.querySelectorAll('svg');
                 icons.forEach(icon => {
                     if (!icon.classList.contains('icon-svg')) {

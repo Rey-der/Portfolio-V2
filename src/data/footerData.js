@@ -3,8 +3,6 @@
  * Structure allows for easy expansion to additional languages
  * while maintaining backward compatibility
  */
-
-// Current language setting (can be connected to a language context/state later)
 const DEFAULT_LANG = 'en';
 
 // Multi-language footer text data
@@ -32,9 +30,7 @@ const footerTextMultiLang = {
   // Add more languages as needed
 };
 
-/**
- * Helper functions to get data based on current language
- */
+/** Helper functions to get data based on current language */
 export const getFooterText = (lang = DEFAULT_LANG) => {
   return footerTextMultiLang[lang] || footerTextMultiLang[DEFAULT_LANG];
 };

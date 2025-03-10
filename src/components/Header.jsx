@@ -8,7 +8,6 @@ import { getHeaderText } from '../data/headerData';
 import { useLanguage } from '../context/LanguageContext'; 
 
 const Header = () => {
-  // State and hooks
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme } = useTheme();
   const location = useLocation();
@@ -19,23 +18,16 @@ const Header = () => {
   // Language context
   const { currentLanguage, toggleLanguage } = useLanguage(); // Use Language Context
   const headerText = getHeaderText(currentLanguage);
-  
-  // Get icon visibility state with CSS approach instead of React state
   const [iconsVisible, setIconsVisible] = useState(false);
-  
-  // Routes where the header should be visible
   const headerVisibleRoutes = ['/', '/home', '/projects', '/about', '/guestbook', '/contact'];
-  
-  // Check if the header should be visible on the current route
   const shouldShowHeader = headerVisibleRoutes.includes(location.pathname);
   
   // Initialize icon visibility once on mount
   useEffect(() => {
-    // Skip if header shouldn't be shown
     if (!shouldShowHeader) return;
-    
-    // Add class to component for CSS selector
+
     const headerEl = document.querySelector('header');
+
     if (headerEl) headerEl.classList.add('icons-loading');
     
     // Delay icon visibility to prevent flicker
@@ -59,7 +51,7 @@ const Header = () => {
     { 
       sectionId: "contact", 
       path: "/contact", 
-      label: "", // Empty label for desktop
+      label: "",
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="icon-svg h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-label={headerText.contact}>
           <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -75,14 +67,11 @@ const Header = () => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
-  // Focus trap and keyboard handling for menu
   useEffect(() => {
     if (!isMenuOpen || !menuRef.current) return;
     
-    // Setup focus trap
     trapFocus(menuRef.current);
     
-    // Event handlers
     const handleEscape = (e) => e.key === 'Escape' && setIsMenuOpen(false);
     const handleClickOutside = (e) => {
       if (!menuRef.current.contains(e.target) && !e.target.classList.contains('menu-button')) {
@@ -90,11 +79,9 @@ const Header = () => {
       }
     };
     
-    // Add event listeners
     document.addEventListener('keydown', handleEscape);
     document.addEventListener('mousedown', handleClickOutside);
     
-    // Cleanup
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.removeEventListener('mousedown', handleClickOutside);
@@ -106,21 +93,15 @@ const Header = () => {
     setIsMenuOpen(false);
     console.log(`Navigation triggered: ${sectionId}, path: ${path}`);
     
-    // Remove focus from the clicked element
     setTimeout(() => {
       document.activeElement.blur();
     }, 150);
     
-    // Contact always goes to separate page
     if (sectionId === 'contact') {
       console.log('Contact navigation: navigating to separate page');
-      
-      // Navigate to contact page
       navigate('/contact');
       
-      // After navigation completes, apply smooth scrolling
       setTimeout(() => {
-        // First immediate scroll to top for responsiveness
         window.scrollTo(0, 0);
         console.log('Contact page: initial scroll reset');
         
@@ -144,12 +125,10 @@ const Header = () => {
     
     // For other sections (projects, about, guestbook)
     
-    // Step 1: If not on main site, navigate there first
     if (location.pathname === '/contact') {
       console.log(`Navigating from contact to section: ${sectionId}`);
       navigate('/');
       
-      // Delay scroll until navigation completes
       setTimeout(() => {
         console.log(`Looking for element #${sectionId}`);
         const element = document.getElementById(sectionId);
@@ -161,11 +140,10 @@ const Header = () => {
           console.log(`Element #${sectionId} not found, using scrollToSection`);
           scrollToSection(sectionId);
         }
-      }, 300); // Longer timeout for navigation from separate page
+      }, 300);
       return;
     }
-    
-    // Step 2: If already on main site, just scroll to section
+
     console.log(`Already on main site, looking for element #${sectionId}`);
     const element = document.getElementById(sectionId);
     if (element) {
@@ -180,15 +158,12 @@ const Header = () => {
    
   // Active section helper based on URL rather than state
   const isActive = (sectionId) => {
-    // Special case for contact page
     if (sectionId === 'contact' && location.pathname === '/contact') {
       return 'text-primary font-medium';
     }
     
     // For main site sections on the home page
     if (location.pathname === '/' && sectionId !== 'contact') {
-      // If we're at root path, use activeSection for the sections on the page
-      // This allows scrolled sections to be highlighted
       if (activeSection === sectionId) {
         return 'text-primary font-medium';
       }
@@ -198,8 +173,6 @@ const Header = () => {
     if (location.pathname.includes(sectionId) && sectionId !== 'home') {
       return 'text-primary font-medium';
     }
-    
-    // No highlight by default
     return '';
   };
 

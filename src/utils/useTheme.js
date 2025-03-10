@@ -7,7 +7,6 @@ export const useTheme = () => {
   
   // Apply CSS variables from themes.js
   useEffect(() => {
-    // Apply theme from themes.js as CSS variables
     if (theme && themes[theme]) {
       const currentTheme = themes[theme];
       Object.entries(currentTheme).forEach(([key, value]) => {

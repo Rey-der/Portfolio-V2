@@ -7,7 +7,6 @@ export const trapFocus = (element) => {
     const firstFocusable = focusable[0];
     const lastFocusable = focusable[focusable.length - 1];
 
-    // Focus on first element when trap is initialized
     firstFocusable.focus();
 
     element.addEventListener('keydown', (event) => {
@@ -34,7 +33,6 @@ export const trapFocus = (element) => {
 export const setAriaLive = (message, priority = 'polite') => {
     const liveRegion = document.getElementById('aria-live-region');
     if (liveRegion) {
-        // Update priority if needed
         liveRegion.setAttribute('aria-live', priority);
         liveRegion.textContent = message;
     }
@@ -55,7 +53,7 @@ export const initializeAccessibility = () => {
         liveRegion.setAttribute('role', 'status');
         liveRegion.setAttribute('aria-live', 'polite');
         liveRegion.id = 'aria-live-region';
-        liveRegion.className = 'sr-only'; // Use tailwind class if available
+        liveRegion.className = 'sr-only';
         document.body.appendChild(liveRegion);
     }
     

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
 /**
- * Custom hook to handle triangle animation with section awareness
  * @param {boolean} inView - Whether the section is in viewport
  * @param {Object} mousePosition - The current mouse position {x, y}
  * @param {boolean} isMobile - Whether the current device is mobile
@@ -13,7 +12,7 @@ const useTriangleAnimation = (inView, mousePosition, isMobile) => {
   const frameRef = useRef(null);
   const lastTimeRef = useRef(0);
 
-  // Animation settings - enhanced for more movement
+  // Animation settings
   const settings = {
     mouseFollowSpeed: 0.02,        // Speed of mouse reaction
     noiseSpeed: 0.8,               // Faster noise movement
@@ -38,25 +37,19 @@ const useTriangleAnimation = (inView, mousePosition, isMobile) => {
     };
   };
 
-  // Check distance and apply soft boundary
+  // Soft boundary
   const applyBoundary = (pos) => {
-    // Calculate distance from center
     const distance = Math.sqrt(pos.x * pos.x + pos.y * pos.y);
     
-    // If within bounds, return as is
     if (distance <= settings.maxDistance) {
       return pos;
     }
-    
-    // Calculate bounce force (stronger the further it exceeds)
     const exceededBy = distance - settings.maxDistance;
     const bounceForce = exceededBy * settings.bounceStrength;
     
-    // Calculate unit vector toward center
     const unitX = pos.x / distance;
     const unitY = pos.y / distance;
-    
-    // Apply bounce force toward center
+
     return {
       x: pos.x - unitX * bounceForce,
       y: pos.y - unitY * bounceForce
@@ -68,7 +61,6 @@ const useTriangleAnimation = (inView, mousePosition, isMobile) => {
     if (isMobile) {
       const handleScroll = () => {
         if (!inView) {
-          // Return to center when not in view
           setPosition(prev => ({
             x: prev.x * 0.9,
             y: prev.y * 0.9
@@ -96,18 +88,15 @@ const useTriangleAnimation = (inView, mousePosition, isMobile) => {
         const deltaTime = timestamp - lastTimeRef.current;
         lastTimeRef.current = timestamp;
         
-        // Always generate noise for consistent movement
         const noise = generateNoise(
           noiseOffsetRef.current.x, 
           noiseOffsetRef.current.y, 
           timestamp
         );
         
-        // Update noise offsets
         noiseOffsetRef.current.x += settings.noiseSpeed;
         noiseOffsetRef.current.y += settings.noiseSpeed;
 
-        // Different behavior based on section visibility and mouse activity
         let newPosition;
         
         if (inView && mousePosition.isInViewport) {
@@ -139,8 +128,7 @@ const useTriangleAnimation = (inView, mousePosition, isMobile) => {
             y: position.y * (1 - settings.returnSpeed)
           };
         }
-        
-        // Apply boundary and soft bounce
+
         setPosition(applyBoundary(newPosition));
 
         frameRef.current = requestAnimationFrame(animate);

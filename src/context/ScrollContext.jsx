@@ -12,11 +12,7 @@ export const ScrollProvider = ({ children }) => {
   const [scrollDirection, setScrollDirection] = useState(null); // 'up' or 'down'
   const location = useLocation();
   const isProgrammaticScrollRef = useRef(false);
-  
-  // Use ref for sections to avoid re-renders
   const sectionsRef = useRef({});
-  
-  // Track registered sections for debugging
   const [registeredSections, setRegisteredSections] = useState([]);
   
   // Debug log function
@@ -27,7 +23,6 @@ export const ScrollProvider = ({ children }) => {
 
   // Intersection Observer for section visibility
 useEffect(() => {
-  // Don't setup observers during programmatic scrolling
   if (isProgrammaticScrollRef.current) return;
   
   const observerOptions = { 
@@ -40,8 +35,7 @@ useEffect(() => {
   
   const handleIntersection = (entries) => {
     if (isProgrammaticScrollRef.current) return;
-    
-    // Find the most visible section
+
     let bestSection = null;
     let bestVisibility = 0;
     
@@ -55,16 +49,12 @@ useEffect(() => {
       }
     });
     
-    // Update active section if we found a good candidate
     if (bestSection) {
       setActiveSection(bestSection);
     }
   };
   
-  // Create observer
   const observer = new IntersectionObserver(handleIntersection, observerOptions);
-  
-  // Observe all registered sections
   sections.forEach(sectionId => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -72,27 +62,23 @@ useEffect(() => {
       sectionObservers[sectionId] = true;
     }
   });
-  
   // Cleanup observers
   return () => {
     observer.disconnect();
   };
 }, [registeredSections, isProgrammaticScrollRef.current]);
 
-  // Track scroll position and direction
   useEffect(() => {
     const handleScroll = () => {
       if (isProgrammaticScrollRef.current) return;
       
       const currentScrollY = window.scrollY;
       setScrollY(currentScrollY);
-      
       // Determine scroll direction
       setScrollDirection(currentScrollY > lastScrollY ? 'down' : 'up');
       setLastScrollY(currentScrollY);
     };
     
-    // Add scroll event listener
     window.addEventListener('scroll', handleScroll);
     
     // Clean up the event listener
@@ -100,8 +86,7 @@ useEffect(() => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [lastScrollY, isProgrammaticScrollRef.current]);
-  
-  // Enhanced section registration that handles both refs and direct DOM elements
+
   const registerSection = useCallback((sectionId, ref) => {
     sectionsRef.current[sectionId] = ref;
     
@@ -112,7 +97,6 @@ useEffect(() => {
       return prevSections;
     });
     
-    // Return a cleanup function
     return () => {
       delete sectionsRef.current[sectionId];
       setRegisteredSections(prevSections => prevSections.filter(id => id !== sectionId));
@@ -183,7 +167,7 @@ useEffect(() => {
     }
   }, [logSections]);
 
-  // Scroll to top helper
+  // Scroll to top
   const scrollToTop = useCallback((smooth = true) => {
     isProgrammaticScrollRef.current = true;
     window.scrollTo({

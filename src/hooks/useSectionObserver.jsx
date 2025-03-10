@@ -25,7 +25,6 @@ const useSectionObserver = (sectionId, path, options = {}) => {
   // Get responsive margins based on screen size - always return properly formatted string
   const getResponsiveMargin = (baseValue) => {
     if (!options.responsive) {
-      // Always return a string with proper format when not responsive
       return `${baseValue}% 0px`;
     }
     
@@ -90,7 +89,6 @@ const useSectionObserver = (sectionId, path, options = {}) => {
       };
     } catch (error) {
       console.error("Error creating IntersectionObserver:", error);
-      // Fallback - just set approaching to true after a delay
       const timer = setTimeout(() => setApproaching(true), 500);
       return () => clearTimeout(timer);
     }
@@ -103,9 +101,7 @@ const useSectionObserver = (sectionId, path, options = {}) => {
     let resizeTimer;
     const handleResize = () => {
       clearTimeout(resizeTimer);
-      // Add a small delay to avoid excessive recalculations during resize
       resizeTimer = setTimeout(() => {
-        // Force refresh of observers
         if (sectionRef.current) {
           setApproaching(false);
         }
@@ -148,10 +144,7 @@ const useSectionObserver = (sectionId, path, options = {}) => {
       scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
       lastScrollY = currentScrollY;
       
-      // Clear previous timeout
       clearTimeout(scrollTimeout);
-      
-      // Set new timeout - consider user "done" scrolling after 100ms of no scroll
       scrollTimeout = setTimeout(() => {
         isScrollingRef.current = false;
       }, 100);
@@ -167,9 +160,7 @@ const useSectionObserver = (sectionId, path, options = {}) => {
 
   // Update URL when section is in view
   useEffect(() => {
-    // Don't update during manual navigation or active scrolling
-    if (isManualNavigationRef.current || isScrollingRef.current || !entry) return;
-    
+    if (isManualNavigationRef.current || isScrollingRef.current || !entry) return;  
     if (inView && entry) {
       // Dynamic threshold based on section height relative to viewport
       const sectionHeight = entry.target.getBoundingClientRect().height;

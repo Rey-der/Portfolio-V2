@@ -23,7 +23,6 @@ export const useThemeStore = create(
       listenToSystemThemeChanges: () => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const handleChange = (e) => {
-          // Only update if user hasn't manually set preference
           if (!localStorage.getItem('theme-storage')) {
             const newTheme = e.matches ? 'dark' : 'light';
             set({ theme: newTheme });

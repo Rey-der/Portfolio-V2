@@ -1,14 +1,12 @@
 import React from 'react';
 
 const LoadingSpinner = ({ size = 'md', color = 'primary', className = '' }) => {
-  // Size mappings
   const sizeClasses = {
     sm: 'w-6 h-6',
     md: 'w-10 h-10',
     lg: 'w-16 h-16'
   };
 
-  // Color mappings
   const colorClasses = {
     primary: 'border-primary',
     secondary: 'border-secondary',
@@ -16,7 +14,6 @@ const LoadingSpinner = ({ size = 'md', color = 'primary', className = '' }) => {
     white: 'border-white'
   };
 
-  // Apply the appropriate classes based on props
   const spinnerSize = sizeClasses[size] || sizeClasses.md;
   const spinnerColor = colorClasses[color] || colorClasses.primary;
 

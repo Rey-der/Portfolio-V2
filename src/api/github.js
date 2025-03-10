@@ -8,7 +8,6 @@ export const fetchGitHubProjects = async () => {
         return response.data;
     } catch (error) {
         console.error('Error fetching GitHub projects:', error);
-        // Return empty array instead of throwing
         return [];
     }
 };

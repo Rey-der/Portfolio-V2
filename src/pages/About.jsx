@@ -4,9 +4,7 @@ import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 import useProgressiveLoading from '../hooks/useProgressiveLoading';
 import useDeviceDetection from '../utils/useDeviceDetection';
-// Keep this for backward compatibility
 import { aboutText } from '../data/aboutData';
-// Add these for language support
 import { getAboutText } from '../data/aboutData';
 import { useLanguage } from '../context/LanguageContext';
 

@@ -2,9 +2,7 @@ import React, { Suspense, useState, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useScroll } from '../context/ScrollContext';
-import ScrollURLUpdate from '../components/ScrollURLUpdate'; // Import ScrollURLUpdate
-
-// Import components without lazy loading for the main layout
+import ScrollURLUpdate from '../components/ScrollURLUpdate';
 import Home from './Home';
 
 // Use lazy loading for sections that appear as you scroll

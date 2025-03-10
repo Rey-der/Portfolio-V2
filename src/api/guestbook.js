@@ -29,9 +29,8 @@ export const fetchGuestbookEntries = async () => {
 };
 
 /**
- * Adds a new entry to the guestbook
- * @param {Object} entry - The entry to add containing name and message
- * @returns {Promise<Object>} The created entry with server-generated ID and timestamp
+ * @param {Object} entry 
+ * @returns {Promise<Object>}
  * @throws {Error} If the API request fails
  */
 export const addGuestbookEntry = async ({ name, message }) => {

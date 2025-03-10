@@ -8,7 +8,6 @@ module.exports = {
         primary: 'var(--primary, #1a73e8)',
         secondary: 'var(--secondary, #333333)',
         accent: 'var(--accent, #ff4081)',
-        // Add the dark mode colors
         'dark-background': '#121212',
         'dark-surface': '#1e1e1e',
         'dark-text': '#e0e0e0',

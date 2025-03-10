@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useScroll } from '../context/ScrollContext';
-// Keep this for backward compatibility
 import { footerText } from '../data/footerData';
-// Add these for language support
 import { getFooterText } from '../data/footerData';
 import { useLanguage } from '../context/LanguageContext'; // Import Language Context
 
@@ -11,23 +9,15 @@ const Footer = () => {
     const { scrollToSection } = useScroll();
     const [isVisible, setIsVisible] = useState(false);
     const location = useLocation();
-    
-    // Language context
     const { currentLanguage } = useLanguage(); // Use Language Context
     const currentFooterText = getFooterText(currentLanguage) || footerText;
-    
-    // Routes where the footer should be visible
     const footerVisibleRoutes = ['/', '/home', '/projects', '/about', '/guestbook', '/contact'];
-    
-    // Check if the footer should be visible on the current route
     const shouldShowFooter = footerVisibleRoutes.includes(location.pathname);
     
     // Initialize footer with delayed visibility
     useEffect(() => {
-      // Skip effect if footer shouldn't be shown
       if (!shouldShowFooter) return;
       
-      // Add class to component for CSS selector
       const footerEl = document.querySelector('footer');
       if (footerEl) footerEl.classList.add('opacity-0', 'transition-opacity', 'duration-700');
       
@@ -39,7 +29,6 @@ const Footer = () => {
           footerEl.classList.add('opacity-100');
           footerEl.classList.add('icons-loading');
           
-          // Initialize icons after footer becomes visible
           const iconsTimer = setTimeout(() => {
             if (footerEl) {
               footerEl.classList.remove('icons-loading');

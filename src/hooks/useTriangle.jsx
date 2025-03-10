@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 const useTriangle = (mousePosition) => {
-  const [animationState, setAnimationState] = useState('initial'); // initial, growing, bouncing, idle, following
+  const [animationState, setAnimationState] = useState('initial');
   const [scale, setScale] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [wiggleOffset, setWiggleOffset] = useState({ x: 0, y: 0 });
@@ -9,14 +9,13 @@ const useTriangle = (mousePosition) => {
   const animationFrame = useRef(null);
   const initialized = useRef(false);
   
-  // Debug logging to track state changes
+  // Debug logging 
   useEffect(() => {
     console.log("Triangle animation state:", animationState, "scale:", scale);
   }, [animationState, scale]);
   
   // Start animation sequence after 1 second
   useEffect(() => {
-    // Prevent double initialization
     if (initialized.current) return;
     initialized.current = true;
     
@@ -31,7 +30,6 @@ const useTriangle = (mousePosition) => {
   
   // Handle animation states
   useEffect(() => {
-    // Clean up any existing animation frame
     if (animationFrame.current) {
       cancelAnimationFrame(animationFrame.current);
       animationFrame.current = null;
@@ -43,7 +41,6 @@ const useTriangle = (mousePosition) => {
       let progress = 0;
       const growAnimation = () => {
         progress += 0.01;
-        // Grow to 120%
         const newScale = progress * 1.2;
         console.log("Growing animation progress:", progress, "scale:", newScale);
         setScale(newScale);
@@ -61,15 +58,14 @@ const useTriangle = (mousePosition) => {
     else if (animationState === 'bouncing') {
       let progress = 0;
       const bounceAnimation = () => {
-        progress += 0.008; // Slower bounce
-        // Bounce from 120% back to 100% with easing
+        progress += 0.008;
         const newScale = 1.2 - (0.2 * (1 - Math.pow(1 - progress, 3)));
         console.log("Bounce animation progress:", progress, "scale:", newScale);
         setScale(newScale);
         
         if (progress >= 1) {
           console.log("Bounce complete, moving to idle");
-          setScale(1); // Ensure we end at exactly 100%
+          setScale(1);
           setAnimationState('idle');
           startWiggling();
           return;
@@ -90,7 +86,6 @@ const useTriangle = (mousePosition) => {
   // Wiggle in circular pattern
   const startWiggling = () => {
     console.log("Starting wiggle animation");
-    // Clear any existing wiggle timer
     if (wiggleTimer.current) {
       cancelAnimationFrame(wiggleTimer.current);
       wiggleTimer.current = null;
@@ -153,7 +148,6 @@ const useTriangle = (mousePosition) => {
     }
   }, [mousePosition, animationState]);
   
-  // Clean up animations
   useEffect(() => {
     return () => {
       console.log("Cleaning up triangle animations");

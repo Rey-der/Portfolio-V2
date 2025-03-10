@@ -7,7 +7,7 @@ This is my personal portfolio website, built with React and Vite. It showcases m
 *   **Projects Showcase:** Displays my projects with descriptions, technologies used, and links to live demos and GitHub repositories.
 *   **About Me:** Provides information about my background, skills, and experience. Includes a unique "About Code" section with a VS Code-like interface.
 *   **Multi-Language Support:** Supports multiple languages to reach a wider audience.
-*   **Contact Form:** Allows visitors to easily contact me.
+*   **Contact Form:** Allows visitors to easily contact.
 *   **Guestbook:** A section for visitors to leave comments.
 *   **Responsive Design:** Fully responsive and optimized for different screen sizes.
 *   **Animations:** Uses Framer Motion for smooth transitions and engaging animations.

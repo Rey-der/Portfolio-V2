@@ -11,7 +11,7 @@ const GuestbookEntryList = ({
   containerVariants,
   itemVariants,
   isMobile,
-  guestbookText // Use the prop instead of direct import
+  guestbookText 
 }) => {
   return (
     <div className="mt-12">
