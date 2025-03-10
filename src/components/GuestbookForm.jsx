@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { addGuestbookEntry } from '../api/guestbook';
 
-const GuestbookForm = ({ onEntryAdded, isMobile }) => {
+const GuestbookForm = ({ onEntryAdded, isMobile, guestbookText }) => { // Use prop
   const [formData, setFormData] = useState({ name: '', message: '' });
   const [submitStatus, setSubmitStatus] = useState(null);
 
@@ -39,7 +39,7 @@ const GuestbookForm = ({ onEntryAdded, isMobile }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: isMobile ? 0.4 : 0.5 }}
       >
-        Guestbook
+        {guestbookText.guestbookTitle}
       </motion.h1>
       
       <motion.p 
@@ -48,7 +48,7 @@ const GuestbookForm = ({ onEntryAdded, isMobile }) => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2, duration: isMobile ? 0.4 : 0.5 }}
       >
-        Leave a message, feedback, or just say hello!
+        {guestbookText.guestbookSubtitle}
       </motion.p>
 
       <motion.div 
@@ -57,12 +57,12 @@ const GuestbookForm = ({ onEntryAdded, isMobile }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: isMobile ? 0.5 : 0.6 }}
       >
-        <h2 className="text-2xl font-semibold mb-4">Sign the Guestbook</h2>
+        <h2 className="text-2xl font-semibold mb-4">{guestbookText.signGuestbook}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="block mb-1 font-medium">
-              Name
+              {guestbookText.nameLabel}
             </label>
             <input
               type="text"
@@ -78,7 +78,7 @@ const GuestbookForm = ({ onEntryAdded, isMobile }) => {
           
           <div>
             <label htmlFor="message" className="block mb-1 font-medium">
-              Message
+              {guestbookText.messageLabel}
             </label>
             <textarea
               id="message"
@@ -96,18 +96,18 @@ const GuestbookForm = ({ onEntryAdded, isMobile }) => {
             className={`btn-primary ${isMobile ? "w-full" : "w-full sm:w-auto"}`}
             disabled={submitStatus === 'submitting'}
           >
-            {submitStatus === 'submitting' ? 'Submitting...' : 'Sign Guestbook'}
+            {submitStatus === 'submitting' ? guestbookText.submittingButton : guestbookText.submitButton}
           </button>
           
           {submitStatus === 'success' && (
             <p className="text-green-600 dark:text-green-400 mt-2">
-              Thank you for signing the guestbook!
+              {guestbookText.successMessage}
             </p>
           )}
           
           {submitStatus === 'error' && (
             <p className="text-red-600 dark:text-red-400 mt-2">
-              Failed to submit your message. Please try again.
+              {guestbookText.errorMessage}
             </p>
           )}
         </form>

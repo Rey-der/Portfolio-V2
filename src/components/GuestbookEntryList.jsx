@@ -10,11 +10,12 @@ const GuestbookEntryList = ({
   animationInView,
   containerVariants,
   itemVariants,
-  isMobile 
+  isMobile,
+  guestbookText // Use the prop instead of direct import
 }) => {
   return (
     <div className="mt-12">
-      <h2 className="text-2xl font-semibold mb-6">Recent Messages</h2>
+      <h2 className="text-2xl font-semibold mb-6">{guestbookText.recentMessages}</h2>
       
       {loading ? (
         <div className="flex justify-center py-10">
@@ -43,7 +44,7 @@ const GuestbookEntryList = ({
             ))
           ) : (
             <p className="text-center py-8 text-gray-500">
-              No messages yet. Be the first to sign the guestbook!
+              {guestbookText.noMessages}
             </p>
           )}
         </motion.div>

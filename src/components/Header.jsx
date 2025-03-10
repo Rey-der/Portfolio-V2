@@ -4,6 +4,8 @@ import { useTheme } from '../utils/useTheme';
 import ThemeToggle from './ThemeToggle';
 import { trapFocus } from '../utils/accessibility';
 import { useScroll } from '../context/ScrollContext';
+import { getHeaderText } from '../data/headerData';
+import { useLanguage } from '../context/LanguageContext'; 
 
 const Header = () => {
   // State and hooks
@@ -13,12 +15,25 @@ const Header = () => {
   const navigate = useNavigate();
   const menuRef = useRef(null);
   const { activeSection, scrollToSection, setActiveSection } = useScroll();
+
+  // Language context
+  const { currentLanguage, toggleLanguage } = useLanguage(); // Use Language Context
+  const headerText = getHeaderText(currentLanguage);
   
   // Get icon visibility state with CSS approach instead of React state
   const [iconsVisible, setIconsVisible] = useState(false);
   
+  // Routes where the header should be visible
+  const headerVisibleRoutes = ['/', '/home', '/projects', '/about', '/guestbook', '/contact'];
+  
+  // Check if the header should be visible on the current route
+  const shouldShowHeader = headerVisibleRoutes.includes(location.pathname);
+  
   // Initialize icon visibility once on mount
   useEffect(() => {
+    // Skip if header shouldn't be shown
+    if (!shouldShowHeader) return;
+    
     // Add class to component for CSS selector
     const headerEl = document.querySelector('header');
     if (headerEl) headerEl.classList.add('icons-loading');
@@ -33,25 +48,25 @@ const Header = () => {
     }, 200);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [shouldShowHeader]);
 
   // Navigation links configuration
   const navigationLinks = [
-    { sectionId: "home", path: "/", label: "Home" },
-    { sectionId: "projects", path: "/projects", label: "Projects" },
-    { sectionId: "about", path: "/about", label: "About" },
-    { sectionId: "guestbook", path: "/guestbook", label: "Guestbook" },
+    { sectionId: "home", path: "/", label: headerText.home },
+    { sectionId: "projects", path: "/projects", label: headerText.projects },
+    { sectionId: "about", path: "/about", label: headerText.about },
+    { sectionId: "guestbook", path: "/guestbook", label: headerText.guestbook },
     { 
       sectionId: "contact", 
       path: "/contact", 
       label: "", // Empty label for desktop
       icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="icon-svg h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-label="Contact">
+        <svg xmlns="http://www.w3.org/2000/svg" className="icon-svg h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-label={headerText.contact}>
           <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
           <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
         </svg>
       ),
-      ariaLabel: "Contact"
+      ariaLabel: headerText.contact
     }
   ];
 
@@ -188,6 +203,9 @@ const Header = () => {
     return '';
   };
 
+  // Don't render the header on non-main routes
+  if (!shouldShowHeader) return null;
+
   return (
     <header className="sticky top-0 z-50 backdrop-blur-md bg-white bg-opacity-90 dark:bg-dark-background dark:bg-opacity-90 shadow-sm transition-colors duration-300">
       <div className="container-wide mx-auto flex justify-between items-center p-4">
@@ -201,7 +219,7 @@ const Header = () => {
               handleNavigation('home', '/');
             }}
           >
-            Your Portfolio
+            {headerText.yourPortfolio}
           </Link>
         </div>
         
@@ -224,13 +242,21 @@ const Header = () => {
           ))}
           
           <ThemeToggle />
+          {/* Language Toggle Button */}
+          <button
+            onClick={toggleLanguage}
+            className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded"
+            aria-label="Toggle Language"
+          >
+            {currentLanguage === 'en' ? 'DE' : 'EN'}
+          </button>
         </nav>
         
         {/* Hamburger Button */}
         <button 
           className="md:hidden flex flex-col justify-center items-center w-8 h-8 menu-button"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
+          aria-label={headerText.toggleMenu}
           aria-expanded={isMenuOpen}
           aria-controls="mobile-menu"
         >
@@ -265,6 +291,14 @@ const Header = () => {
             ))}
             <div className="mt-4 mb-2">
               <ThemeToggle />
+              {/* Language Toggle Button in Mobile Menu */}
+              <button
+                onClick={toggleLanguage}
+                className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-bold py-2 px-4 rounded mt-2"
+                aria-label="Toggle Language"
+              >
+                {currentLanguage === 'en' ? 'DE' : 'EN'}
+              </button>
             </div>
           </nav>
         </div>

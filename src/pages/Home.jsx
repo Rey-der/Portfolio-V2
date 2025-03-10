@@ -5,6 +5,11 @@ import useProgressiveLoading from '../hooks/useProgressiveLoading';
 import useMousePosition from '../utils/useMousePosition';
 import useTriangleAnimation from '../animations/AnimatedTriangle';
 import useDeviceDetection from '../utils/useDeviceDetection';
+// Keep this for backward compatibility
+import { homeText } from '../data/homeData';
+// Add these for language support
+import { getHomeText } from '../data/homeData';
+import { useLanguage } from '../context/LanguageContext';
 
 const Home = ({ registerWithURL }) => {
     // Replace useSectionObserver with simpler ref and inView check
@@ -33,6 +38,10 @@ const Home = ({ registerWithURL }) => {
     
     // Get triangle position from our animation hook
     const trianglePos = useTriangleAnimation(inView, mousePosition, isMobile);
+
+    // Use language context
+    const { currentLanguage } = useLanguage();
+    const currentHomeText = getHomeText(currentLanguage) || homeText;
        
     // Register this section with the new URL-aware registration function
     useEffect(() => {
@@ -69,7 +78,6 @@ const Home = ({ registerWithURL }) => {
             style={{ 
                 scrollMarginTop: '60px',  // Adjust based on your header height
                 position: 'relative',     // Ensure position context
-                zIndex: 1                // Set a stacking context for better detection
             }}
         >
             <div className="flex flex-col items-center justify-center h-full min-h-[80vh]">
@@ -98,10 +106,9 @@ const Home = ({ registerWithURL }) => {
                 </div>
                 
                 <AnimatedSection className="text-center relative z-10 mt-16">
-                    <h1 className="text-5xl md:text-6xl font-bold mb-6">Welcome to My Portfolio</h1>
+                    <h1 className="text-5xl md:text-6xl font-bold mb-6">{currentHomeText.welcomeTitle}</h1>
                     <p className="text-xl md:text-2xl mt-4 max-w-2xl mx-auto">
-                        I create beautiful, responsive websites with modern technologies.
-                        Explore my work and let's build something amazing together.
+                        {currentHomeText.welcomeSubtitle}
                     </p>
                 </AnimatedSection>
             </div>

@@ -4,6 +4,7 @@ import App from "./App.jsx";
 import "./index.css";
 import "./styles/spinner.css";
 import "./styles/animations.css";
+import { LanguageProvider } from './context/LanguageContext'; // Import Language Provider
 
 console.log('🚀 Application bootstrap starting');
 
@@ -63,7 +64,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Render app immediately without setTimeout
   ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>
-      <App />
+      <LanguageProvider>
+        <App />
+      </LanguageProvider>
     </React.StrictMode>
   );
   

@@ -6,11 +6,20 @@ import useProgressiveLoading from '../hooks/useProgressiveLoading';
 import useDeviceDetection from '../utils/useDeviceDetection';
 import ContactForm from '../components/ContactForm';
 import ContactInfo from '../components/ContactInfo';
+// Keep this for backward compatibility
+import { contactText } from '../data/contactData';
+// Add these for language support
+import { getContactText } from '../data/contactData';
+import { useLanguage } from '../context/LanguageContext';
 
 const Contact = ({ registerWithURL }) => {
     const location = useLocation();
     const initialRenderRef = useRef(true);
     const [showContent, setShowContent] = useState(false);
+    
+    // Language context
+    const { currentLanguage } = useLanguage();
+    const currentContactText = getContactText(currentLanguage) || contactText;
     
     // Create a simple ref for section registration
     const sectionRef = useRef(null);
@@ -141,11 +150,11 @@ const Contact = ({ registerWithURL }) => {
                         {/* Header */}
                         <motion.div variants={itemVariants} className="text-center">
                             <h1 className="text-4xl md:text-5xl font-bold mb-3 relative inline-block">
-                                Let's Connect
+                                {currentContactText.letsConnect}
                                 <div className="absolute bottom-0 left-0 w-full h-1 bg-primary transform origin-left animate-expand"></div>
                             </h1>
                             <p className="text-gray-600 dark:text-gray-300 text-lg max-w-2xl mx-auto">
-                                Have a question or want to work together? Drop me a message!
+                                {currentContactText.haveAQuestion}
                             </p>
                         </motion.div>
                         
@@ -156,12 +165,12 @@ const Contact = ({ registerWithURL }) => {
                         >
                             {/* Left column - Contact info with properly tagged icons */}
                             <div className={`w-full ${isMobile ? '' : 'md:w-1/3'} space-y-6`}>
-                                <ContactInfo />
+                                <ContactInfo contactText={currentContactText} />
                             </div>
                             
                             {/* Right column - Contact form */}
                             <div className={`w-full ${isMobile ? '' : 'md:w-2/3'}`}>
-                                <ContactForm />
+                                <ContactForm contactText={currentContactText} />
                             </div>
                         </motion.div>
 

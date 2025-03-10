@@ -7,6 +7,11 @@ import useDeviceDetection from '../utils/useDeviceDetection';
 import GuestbookForm from '../components/GuestbookForm';
 import GuestbookEntryList from '../components/GuestbookEntryList';
 import ScrollToTopButton from '../utils/ScrollToTopButton';
+// Keep this for backward compatibility
+import { guestbookText } from '../data/guestbookData';
+// Add these for language support
+import { getGuestbookText } from '../data/guestbookData';
+import { useLanguage } from '../context/LanguageContext';
 
 const Guestbook = ({ registerWithURL }) => {
   // Create a simple ref for registration
@@ -18,6 +23,10 @@ const Guestbook = ({ registerWithURL }) => {
   // Device detection for responsive adjustments
   const isMobile = useDeviceDetection();
   const isTablet = useDeviceDetection(1024);
+
+  // Use language context
+  const { currentLanguage } = useLanguage();
+  const currentGuestbookText = getGuestbookText(currentLanguage) || guestbookText;
   
   // Register section with the new URL-aware registration function
   useEffect(() => {
@@ -106,14 +115,14 @@ const Guestbook = ({ registerWithURL }) => {
         setEntries(data);
       } catch (err) {
         console.error('Failed to fetch guestbook entries:', err);
-        setError('Failed to load guestbook entries. Please try again later.');
+        setError(currentGuestbookText.errorMessage || 'Failed to load guestbook entries. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
     getEntries();
-  }, []);
+  }, [currentLanguage]);
 
   // Handle new entry submissions
   const handleEntryAdded = (newEntry) => {
@@ -131,6 +140,7 @@ const Guestbook = ({ registerWithURL }) => {
         <GuestbookForm 
           onEntryAdded={handleEntryAdded}
           isMobile={isMobile}
+          guestbookText={currentGuestbookText}
         />
 
         {/* Entries list component */}
@@ -143,12 +153,14 @@ const Guestbook = ({ registerWithURL }) => {
           containerVariants={containerVariants}
           itemVariants={itemVariants}
           isMobile={isMobile}
+          guestbookText={currentGuestbookText}
         />
       
         {/* Scroll to top button */}
         <ScrollToTopButton 
           handleScrollToTop={handleScrollToTop}
           isMobile={isMobile}
+          guestbookText={currentGuestbookText}
         />
       </div>
     </section>
