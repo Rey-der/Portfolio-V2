@@ -1,79 +1,75 @@
-# Portfolio-V2
+🎨 Portfolio-V2
 
-This is my personal portfolio website, built with React and Vite. It showcases my projects, skills, and experience.
+🚀 My personal portfolio website, built with React and Vite, showcasing my projects, skills, and experience.
 
-## Key Features
+    📢 Note: Lighthouse scores are near perfect for Accessibility, Best Practices, and SEO. Performance optimizations will be refined after adding more portfolio content (images, animations).
 
-*   **Projects Showcase:** Displays my projects with descriptions, technologies used, and links to live demos and GitHub repositories.
-*   **About Me:** Provides information about my background, skills, and experience. Includes a unique "About Code" section with a VS Code-like interface.
-*   **Multi-Language Support:** Supports multiple languages to reach a wider audience.
-*   **Contact Form:** Allows visitors to easily contact.
-*   **Guestbook:** A section for visitors to leave comments.
-*   **Responsive Design:** Fully responsive and optimized for different screen sizes.
-*   **Animations:** Uses Framer Motion for smooth transitions and engaging animations.
-*   **Progressive Loading:** Implements progressive loading for improved performance.
-*   **Scroll-Based URL Updates:** Updates the URL based on the current section in view.
+✨ Key Features
 
-## Technologies Used
+    🎭 Projects Showcase – Displays my projects with descriptions, technologies used, and links to live demos & repositories.
+        🔄 3D Carousel with advanced scroll/swipe detection:
+            Smooth, direction-aware animations
+            Touch & trackpad optimized scrolling
+            Consistent flick/swipe behavior for intuitive navigation
+    🧑‍💻 About Me – Includes a unique "About Code" section styled like VS Code.
+    🌍 Multi-Language Support – Expands accessibility to a wider audience.
+    📩 Contact Form – Allows visitors to reach out easily.
+    💬 Guestbook – A space for visitors to leave comments.
+    📱 Responsive Design – Optimized for all screen sizes.
+    🎬 Animations – Uses Framer Motion for fluid transitions.
+    🚀 Progressive Loading – Enhances performance dynamically.
+    🔗 Scroll-Based URL Updates – Adjusts the URL to reflect the section in view.
+    🏗️ Dynamic Header/Footer – Route-based visibility for an immersive experience.
 
-*   **React:** A JavaScript library for building user interfaces.
-*   **Vite:** A fast build tool and development server.
-*   **Tailwind CSS:** A utility-first CSS framework.
-*   **Framer Motion:** A library for creating animations.
-*   **GitHub API:** Fetches project data from GitHub.
+🛠️ Technologies Used
 
-## Getting Started
+🔹 React – Component-based UI framework
+🔹 Vite – Lightning-fast dev environment
+🔹 Tailwind CSS – Utility-first styling
+🔹 Framer Motion – Smooth animations
+🔹 GitHub API – Fetches project data
+⚡ Getting Started
 
-1.  **Clone the repository:**
+    Install dependencies:
 
-    ```bash
-    git clone [your_repository_url]
-    cd [your_repository_name]
-    ```
+npm install
 
-2.  **Install dependencies:**
+Run the development server:
 
-    ```bash
-    npm install
-    ```
-
-3.  **Run the development server:**
-
-    ```bash
     npm run dev
-    ```
 
-    This will start the development server at `http://localhost:5173` (or a similar port).
+    📍 Opens at http://localhost:5173 (or a similar port).
 
-## Building for Production
+📦 Building for Production
 
-To create a production build:
+To create an optimized production build:
 
-```bash
 npm run build
-```
 
-This will create an optimized build in the `dist` directory.
+This generates a minified build in the dist directory.
+⚙️ Configuration
 
-## Configuration
+📝 Vite: Configurations in vite.config.js
+🎨 Tailwind CSS: Custom styles in tailwind.config.js
+🔑 Environment Variables: Store sensitive data in .env
+🖼️ Layout Visibility: Controlled in MainLayout
+📂 Data & API
 
-*   **Vite:** Configuration is located in `vite.config.js`.
-*   **Tailwind CSS:** Configuration is located in `tailwind.config.js`.
-*   **Environment Variables:** Create a `.env` file in the root directory to store sensitive information such as API keys.
+📁 Data Storage:
 
-## Data
+    src/data – Houses project info, bio, and multilingual content.
 
-Project data, about information, and UI text are stored in JavaScript files within the `src/data` directory. These data files are structured to support multiple languages.
+📡 API Handling:
 
-## API
+    src/api/github.js – Fetches GitHub activity.
+    src/api/guestbook.js – Manages guestbook entries.
 
-*   `src/api/github.js`: Fetches project data from GitHub.
-*   `src/api/guestbook.js`: Handles guestbook entries.
+🔧 Custom Hooks
 
-## Contributing
+🌀 useSideScroll – Enables smooth touch & trackpad gestures for the interactive 3D carousel.
+🤝 Contributing
 
-Contributions are welcome! Please feel free to submit pull requests or open issues.
+🚀 Contributions are welcome! Feel free to open issues or submit pull requests.
+📜 License
 
-## License
-
-[MIT License]
+📝 MIT License – Free to use and modify!

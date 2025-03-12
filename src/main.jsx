@@ -5,6 +5,7 @@ import "./index.css";
 import "./styles/spinner.css";
 import "./styles/animations.css";
 import { LanguageProvider } from './context/LanguageContext'; // Import Language Provider
+import { ScrollProvider } from './context/ScrollContext'; // Add this import
 
 console.log('🚀 Application bootstrap starting');
 
@@ -61,14 +62,15 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
   document.head.appendChild(style);
 
-  // Render app immediately without setTimeout
+  // Render app with ScrollProvider wrapping everything
   ReactDOM.createRoot(document.getElementById("root")).render(
     <React.StrictMode>
       <LanguageProvider>
-        <App />
+        <ScrollProvider>
+          <App />
+        </ScrollProvider>
       </LanguageProvider>
     </React.StrictMode>
   );
-  
   console.log('✅ React app mounted');
 });

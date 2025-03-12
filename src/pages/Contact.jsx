@@ -9,6 +9,7 @@ import ContactInfo from '../components/ContactInfo';
 import { contactText } from '../data/contactData';
 import { getContactText } from '../data/contactData';
 import { useLanguage } from '../context/LanguageContext';
+import useSectionRegistration from '../hooks/useSectionRegistration';
 
 const Contact = ({ registerWithURL }) => {
     const location = useLocation();
@@ -19,10 +20,10 @@ const Contact = ({ registerWithURL }) => {
     const { currentLanguage } = useLanguage();
     const currentContactText = getContactText(currentLanguage) || contactText;
     
-    // Create a simple ref for section registration
-    const sectionRef = useRef(null);
+    // Use the custom registration hook
+    const { sectionRef } = useSectionRegistration('contact', registerWithURL);
     
-    // Separate animation tracking with useInView if needed
+    // Separate animation tracking with useInView
     const { ref: animationRef, inView } = useInView({
       threshold: 0.1,
       triggerOnce: false
@@ -41,12 +42,58 @@ const Contact = ({ registerWithURL }) => {
     
     // Preload Guestbook section
     useProgressiveLoading(['/src/pages/GuestBook.jsx']);
-    
+
+    // Hide all scrollbars specifically for this component with aggressive CSS
     useEffect(() => {
-      if (sectionRef.current && registerWithURL) {
-        return registerWithURL('contact', sectionRef);
-      }
-    }, [registerWithURL]);
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Global scrollbar hiding */
+            body::-webkit-scrollbar,
+            html::-webkit-scrollbar,
+            div::-webkit-scrollbar,
+            *::-webkit-scrollbar {
+                width: 0 !important;
+                display: none !important;
+            }
+            
+            body, html, div, *[class*="scroll"], *[class*="overflow"] {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
+            }
+            
+            /* Contact-specific scrollbar hiding */
+            #contact *,
+            .contact-container * {
+                scrollbar-width: none !important;
+                -ms-overflow-style: none !important;
+                overflow-y: auto !important;
+            }
+            
+            #contact *::-webkit-scrollbar,
+            .contact-container *::-webkit-scrollbar {
+                display: none !important;
+                width: 0 !important;
+                height: 0 !important;
+                opacity: 0 !important;
+            }
+            
+            /* Form elements */
+            input::-webkit-scrollbar,
+            textarea::-webkit-scrollbar,
+            select::-webkit-scrollbar {
+                display: none !important;
+                width: 0 !important;
+                height: 0 !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        return () => {
+            if (style.parentNode) {
+                style.parentNode.removeChild(style);
+            }
+        };
+    }, []);
     
     // Handle icon visibility with the new system
     useEffect(() => {
@@ -99,7 +146,7 @@ const Contact = ({ registerWithURL }) => {
         visible: {
             opacity: 1,
             transition: {
-                staggerChildren: isMobile ? 0.10 : 0.15 // Slightly faster stagger on mobile
+                staggerChildren: isMobile ? 0.10 : 0.15
             }
         }
     };
@@ -114,11 +161,89 @@ const Contact = ({ registerWithURL }) => {
     };
 
     if (!showContent) {
-        return <div ref={setRefs} id="contact" className="min-h-screen"></div>;
+        return (
+            <section 
+                ref={setRefs} 
+                id="contact" 
+                className="min-h-screen"
+            >
+                {/* URL triggers for scroll system */}
+                <div className="section-url-trigger section-url-trigger-entry" data-section="contact" data-trigger="entry"></div>
+                <div className="section-url-trigger section-url-trigger-exit" data-section="contact" data-trigger="exit"></div>
+            </section>
+        );
     }
 
+    // Decorative scrollbar - mimicking the functional one
+    const DecorativeScrollbar = () => (
+        <div 
+            className="fixed right-0 top-0 bottom-0 h-screen z-50 opacity-40 pointer-events-none"
+            style={{ 
+                width: '30px',
+            }}
+        >
+            {/* Major tick marks */}
+            {[0, 0.5, 1].map((position, index) => (
+                <div
+                    key={`major-${index}`}
+                    className="absolute right-0"
+                    style={{ 
+                        top: `${10 + position * 80}%`,
+                        width: index === 0 ? '14px' : '12px',
+                        height: index === 0 ? '3px' : '2px',
+                        right: '4px',
+                        transform: 'translateY(-50%)',
+                        backgroundColor: index === 0 ? 
+                            'rgb(59, 130, 246)' : 'rgb(107, 114, 128)',
+                        opacity: index === 0 ? 1 : 0.7,
+                    }}
+                />
+            ))}
+            
+            {/* Small tick lines - static decorative versions */}
+            {[0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9].map((tickPos, index) => (
+                <div
+                    key={`minor-${index}`}
+                    className="absolute"
+                    style={{ 
+                        top: `${10 + tickPos * 80}%`,
+                        right: '4px',
+                        height: '2px',
+                        transform: 'translateY(-50%)',
+                    }}
+                >
+                    <div 
+                        className="bg-gray-400 dark:bg-gray-500"
+                        style={{
+                            width: index % 3 === 0 ? '8px' : '4px', // Varied widths for visual interest
+                            height: '2px',
+                            opacity: 0.4,
+                            position: 'absolute',
+                            right: '0',
+                            borderRadius: '1px'
+                        }}
+                    />
+                </div>
+            ))}
+            
+            {/* Simulated dot */}
+            <div
+                className="absolute right-4"
+                style={{ 
+                    top: '10%',
+                    transform: 'translate(50%, -50%)',
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    backgroundColor: 'rgb(59, 130, 246)',
+                    opacity: 0.8,
+                }}
+            />
+        </div>
+    );
+
     return (
-        <div className="relative">
+        <div className="relative overflow-hidden">
             {/* Background gradient effect */}
             <div 
                 className="fixed inset-x-0 top-0 h-screen pointer-events-none bg-gradient-to-b from-white via-gray-50 to-transparent dark:from-dark-background dark:via-gray-900 dark:to-transparent opacity-75 -z-10"
@@ -128,12 +253,19 @@ const Contact = ({ registerWithURL }) => {
                 }}
             />
             
+            {/* Add decorative scrollbar */}
+            <DecorativeScrollbar />
+            
             <section 
                 ref={setRefs} 
                 id="contact" 
-                className="min-h-screen py-16 px-4 relative"
+                className="min-h-screen py-16 px-4 relative overflow-hidden"
             >
-                <div className="container mx-auto max-w-4xl">
+                {/* URL triggers for scroll system */}
+                <div className="section-url-trigger section-url-trigger-entry" data-section="contact" data-trigger="entry"></div>
+                <div className="section-url-trigger section-url-trigger-exit" data-section="contact" data-trigger="exit"></div>
+                
+                <div className="container mx-auto max-w-4xl overflow-hidden">
                     <motion.div
                         className="space-y-12"
                         variants={containerVariants}
@@ -158,12 +290,12 @@ const Contact = ({ registerWithURL }) => {
                             className={`flex flex-col ${isMobile ? '' : 'md:flex-row'} gap-8`}
                         >
                             {/* Left column - Contact info with properly tagged icons */}
-                            <div className={`w-full ${isMobile ? '' : 'md:w-1/3'} space-y-6`}>
+                            <div className={`w-full ${isMobile ? '' : 'md:w-1/3'} space-y-6 overflow-hidden`}>
                                 <ContactInfo contactText={currentContactText} />
                             </div>
                             
                             {/* Right column - Contact form */}
-                            <div className={`w-full ${isMobile ? '' : 'md:w-2/3'}`}>
+                            <div className={`w-full ${isMobile ? '' : 'md:w-2/3'} overflow-hidden`}>
                                 <ContactForm contactText={currentContactText} />
                             </div>
                         </motion.div>

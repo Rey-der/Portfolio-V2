@@ -1,59 +1,77 @@
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 
 const useIntersectionObserver = (options = {}) => {
-  const ref = useRef(null);
+  const {
+    root = null,
+    rootMargin = '0px',
+    threshold = 0,
+    triggerOnce = false,
+    onIntersect,
+  } = options;
+
   const [inView, setInView] = useState(false);
   const [entry, setEntry] = useState(null);
   const [intersectionRatio, setIntersectionRatio] = useState(0);
-  const callbackRef = useRef(options.onIntersect);
+  
+  const ref = useRef(null);
+  const observerRef = useRef(null);
+  const callbackRef = useRef(onIntersect);
 
   // Update callback ref when onIntersect changes
   useEffect(() => {
-    callbackRef.current = options.onIntersect;
-  }, [options.onIntersect]);
+    callbackRef.current = onIntersect;
+  }, [onIntersect]);
 
-  // Setup intersection observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      setInView(entry.isIntersecting);
-      setEntry(entry);
-      setIntersectionRatio(entry.intersectionRatio);
-      
+  const observerOptions = useMemo(() => ({
+    root,
+    rootMargin,
+    threshold,
+  }), [root, rootMargin, threshold]);
+
+  const createObserver = useCallback(() => {
+    observerRef.current = new IntersectionObserver((entries) => {
+      const currentEntry = entries[0];
+      if (!currentEntry) return;
+
+      setInView(currentEntry.isIntersecting);
+      setEntry(currentEntry);
+      setIntersectionRatio(currentEntry.intersectionRatio);
+
       if (callbackRef.current && typeof callbackRef.current === 'function') {
-        callbackRef.current(entry);
+        callbackRef.current(currentEntry);
       }
       
-      if (entry.isIntersecting && options.triggerOnce) {
-        observer.unobserve(entry.target);
+      if (triggerOnce && currentEntry.isIntersecting && observerRef.current) {
+        observerRef.current.unobserve(currentEntry.target);
       }
-    }, {
-      root: options.root || null,
-      rootMargin: options.rootMargin || '0px',
-      threshold: options.threshold || 0
-    });
+    }, observerOptions);
+  }, [observerOptions, triggerOnce]);
 
-    const currentRef = ref.current;
-
-    if (currentRef) {
-      observer.observe(currentRef);
+  // Create observer and observe the current element.
+  useEffect(() => {
+    createObserver();
+    const currentElement = ref.current;
+    if (currentElement && observerRef.current) {
+      observerRef.current.observe(currentElement);
     }
-
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
+      if (currentElement && observerRef.current) {
+        observerRef.current.unobserve(currentElement);
+      }
+      if (observerRef.current) {
+        observerRef.current.disconnect();
       }
     };
-  }, [options.root, options.rootMargin, options.threshold, options.triggerOnce]);
+  }, [createObserver]);
 
+  // Provide a ref updater to allow dynamic element ref changes.
   const updateRef = useCallback((node) => {
-    if (ref.current) {
-      observer.unobserve(ref.current);
+    if (ref.current && observerRef.current) {
+      observerRef.current.unobserve(ref.current);
     }
-    
     ref.current = node;
-    
-    if (node) {
-      observer.observe(node);
+    if (node && observerRef.current) {
+      observerRef.current.observe(node);
     }
   }, []);
 

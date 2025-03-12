@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { forwardRef, useRef, useImperativeHandle, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub, FaExternalLinkAlt, FaGlobe } from 'react-icons/fa';
 
-const ProjectCard = ({ 
+const ProjectCard = forwardRef(({ 
   title, 
   description, 
   image, 
@@ -10,13 +10,50 @@ const ProjectCard = ({
   githubUrl, 
   demoUrl, 
   liveUrl, 
-  technologies 
-}) => {
+  technologies,
+  isActive,
+  isAdjacent = false,
+  buttonsDisabled = false,
+  isSideHovered = false,
+  partialProgress = 0,
+  style = {}
+}, ref) => {
+  const cardRef = useRef(null);
+  // Track hover state manually instead of relying on whileHover
+  const [isHovered, setIsHovered] = useState(false);
+  
+  useImperativeHandle(ref, () => ({
+    getNode: () => cardRef.current,
+    applyPartialAnimation: (progress) => {
+      if (!cardRef.current) return;
+    }
+  }));
+  
+  // Calculate hover style - more responsive when adjacent or active
+  const hoverY = isHovered ? (isActive ? -5 : isAdjacent ? -3 : 0) : 0;
+  
+  // Calculate scale effect based on side hover or manual hover
+  const scaleEffect = isHovered || isSideHovered ? 1.03 : 1;
+  
+  // Combine styles from parent with local styles
+  const combinedStyle = {
+    ...style,
+    transform: partialProgress ? `translateX(${partialProgress * 20}px)` : undefined
+  };
+  
   return (
     <motion.div 
-      className="bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg h-full flex flex-col"
-      whileHover={{ y: -5 }}
+      ref={cardRef}
+      className={`bg-white dark:bg-slate-800 rounded-lg overflow-hidden shadow-lg h-full flex flex-col
+        ${isActive ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}`}
+      animate={{ 
+        y: hoverY, 
+        scale: scaleEffect 
+      }}
       transition={{ duration: 0.3 }}
+      style={combinedStyle}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Project Image */}
       <div className="relative h-48 overflow-hidden">
@@ -65,9 +102,14 @@ const ProjectCard = ({
           </div>
         </div>
         
-        {/* Links */}
-        <div className="flex flex-wrap gap-2 mt-auto">
-          {githubUrl && (
+        {/* Links - now keep hover state active */}
+        <div 
+          className="flex flex-wrap gap-2 mt-auto relative"
+          // These handlers keep the card hovered state active when over buttons
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseOver={() => setIsHovered(true)}
+        >
+          {githubUrl && !buttonsDisabled && (
             <a 
               href={githubUrl} 
               target="_blank" 
@@ -78,7 +120,7 @@ const ProjectCard = ({
             </a>
           )}
           
-          {demoUrl && (
+          {demoUrl && !buttonsDisabled && (
             <a 
               href={demoUrl} 
               target="_blank" 
@@ -89,7 +131,7 @@ const ProjectCard = ({
             </a>
           )}
           
-          {liveUrl && (
+          {liveUrl && !buttonsDisabled && (
             <a 
               href={liveUrl} 
               target="_blank" 
@@ -103,6 +145,8 @@ const ProjectCard = ({
       </div>
     </motion.div>
   );
-};
+});
+
+ProjectCard.displayName = 'ProjectCard';
 
 export default ProjectCard;
