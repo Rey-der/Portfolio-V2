@@ -42,6 +42,7 @@
   /* Fix html element styles */
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 120px;
     font-family: var(--fontFamily);
     overscroll-behavior: none;
   }
@@ -125,6 +126,16 @@
 
   .section {
     @apply py-12 md:py-16;
+  }
+
+  section[id] {
+    margin-top: 0 !important;
+    padding-top: 120px !important;
+  }
+
+  #home {
+    padding-top: 0 !important;
+    padding-top: 12px !important;
   }
 
   .form-input {

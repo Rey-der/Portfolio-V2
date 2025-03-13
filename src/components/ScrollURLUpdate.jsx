@@ -11,19 +11,19 @@ const ScrollURLUpdate = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [currentPath, setCurrentPath] = useState(location.pathname);
+  const urlCooldownRef = useRef(false);
   
   // Scroll context
   const { scrollDirection, settings, sectionsInView } = useScroll();
   
   // Configuration constants
   const CONFIG = {
-    VISIBILITY_THRESHOLD: 0.6, // Initial visibility threshold (60%)
-    URL_UPDATE_DEBOUNCE: 200, // Debounce URL updates to prevent rapid changes
+    VISIBILITY_THRESHOLD: 0.51, 
+    URL_COOLDOWN_MS: 300, // Cooldown period after URL updates
   };
   
   // Refs
   const urlTriggerObserverRef = useRef(null);
-  const updateTimeoutRef = useRef(null);
   
   // Debug state
   const [showScanLine, setShowScanLine] = useState(false);
@@ -34,12 +34,18 @@ const ScrollURLUpdate = () => {
   const updateURL = useCallback((sectionId, triggerType, visibility = 1.0) => {
     const newPath = sectionId === 'home' ? '/' : `/${sectionId}`;
     
-    if (currentPath !== newPath) {
+    if (currentPath !== newPath && !urlCooldownRef.current) {
       console.log(`ScrollURLUpdate - URL UPDATE: ${sectionId} (${triggerType}) → ${newPath} (visibility: ${visibility.toFixed(2)})`);
       
       // Update state and URL
       setCurrentPath(newPath);
       navigate(newPath, { replace: true });
+      
+      // Set cooldown to prevent rapid URL changes
+      urlCooldownRef.current = true;
+      setTimeout(() => {
+        urlCooldownRef.current = false;
+      }, CONFIG.URL_COOLDOWN_MS);
       
       // Notify other components
       document.dispatchEvent(new CustomEvent('url-update', { 
@@ -63,46 +69,6 @@ const ScrollURLUpdate = () => {
     return false;
   }, [currentPath, navigate, scrollDirection]);
   
-  // Process sections in view to determine which should be in URL
-  useEffect(() => {
-    if (!sectionsInView || sectionsInView.length === 0) return;
-    
-    // Clear any pending updates
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-    
-    // Debounce the update to avoid rapid URL changes
-    updateTimeoutRef.current = setTimeout(() => {
-      // Find section with highest visibility
-      let highestVisibility = 0;
-      let sectionWithHighestVisibility = null;
-      
-      sectionsInView.forEach(section => {
-        if (section.visibility > highestVisibility) {
-          highestVisibility = section.visibility;
-          sectionWithHighestVisibility = section.id;
-        }
-      });
-      
-      // Only update if highest visibility exceeds threshold and is different from current
-      if (sectionWithHighestVisibility && highestVisibility >= CONFIG.VISIBILITY_THRESHOLD) {
-        const currentSectionId = currentPath === '/' ? 'home' : currentPath.substring(1);
-        
-        // Check if the section with highest visibility is different from current section
-        if (sectionWithHighestVisibility !== currentSectionId) {
-          updateURL(sectionWithHighestVisibility, 'visibility-comparison', highestVisibility);
-        }
-      }
-    }, CONFIG.URL_UPDATE_DEBOUNCE);
-    
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, [sectionsInView, updateURL, currentPath]);
-  
   // Set up IntersectionObserver for URL triggers
   useEffect(() => {
     // Clean up existing observer
@@ -125,15 +91,13 @@ const ScrollURLUpdate = () => {
           
           if (!sectionId) return;
           
-          // If we're using the visibility comparison approach, we'll rely less on triggers
-          // Only use triggers when there's no competing section with higher visibility
-          if (sectionsInView && sectionsInView.length > 1) {
-            // Multiple sections in view, let the visibility comparison handle it
-            return;
+          // Direction-based activation to prevent URL oscillation
+          // Only trigger entry points when scrolling down, and exit points when scrolling up
+          if ((scrollDirection === 'down' && triggerType === 'entry') || 
+              (scrollDirection === 'up' && triggerType === 'exit')) {
+            // Update the URL
+            updateURL(sectionId, triggerType);
           }
-          
-          // Update the URL
-          updateURL(sectionId, triggerType);
         }
       });
     };
@@ -158,7 +122,7 @@ const ScrollURLUpdate = () => {
         urlTriggerObserverRef.current.disconnect();
       }
     };
-  }, [updateURL, sectionsInView]);
+  }, [updateURL, scrollDirection]); // Add scrollDirection to dependencies
   
   // Register styles for URL triggers
   useEffect(() => {

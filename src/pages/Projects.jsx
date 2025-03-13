@@ -98,6 +98,7 @@ const Projects = ({ registerWithURL }) => {
       className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900 relative"
       style={{
         minHeight: 'calc(100vh - 80px)',
+        scrollMarginTop: '120px',
         paddingBottom: '100px',
         position: 'relative' // Ensure relative positioning
       }}

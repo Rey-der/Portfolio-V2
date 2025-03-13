@@ -58,7 +58,7 @@ const SectionTriggers = ({ sectionId }) => {
           zIndex: -1,
         }}
         data-section={sectionId}
-        data-trigger="url-entry"
+        data-trigger="entry"  // CHANGED FROM url-entry TO entry
       />
       
       {/* URL trigger for exiting section - positioned at 25% up from bottom */}
@@ -76,7 +76,7 @@ const SectionTriggers = ({ sectionId }) => {
           zIndex: -1,
         }}
         data-section={sectionId}
-        data-trigger="url-exit"
+        data-trigger="exit"  // CHANGED FROM url-exit TO exit
       />
     </>
   );

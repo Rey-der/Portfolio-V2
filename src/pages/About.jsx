@@ -137,7 +137,7 @@ const About = ({ registerWithURL }) => {
       PHP: '#4F5D95',
       Go: '#00ADD8',
     };
-    return colors[language] || '#858585'; // Default gray
+    return colors[language] || '#858585';
   };
   
   return (
@@ -148,9 +148,9 @@ const About = ({ registerWithURL }) => {
       className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900 relative"
       style={{
         minHeight: 'calc(100vh - 80px)',
+        scrollMarginTop: '120px',
         paddingBottom: '100px',
-        marginTop: '80px', // ADDED TOP MARGIN HERE
-        position: 'relative' // Ensure relative positioning
+        position: 'relative'
       }}
     >
       {/* Add invisible triggers at start and end */}

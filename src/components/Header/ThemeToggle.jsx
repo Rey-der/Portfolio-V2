@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../../utils/useTheme';
 
 const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
@@ -9,6 +9,7 @@ const ThemeToggle = () => {
       onClick={toggleTheme}
       aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       className="p-2 rounded-full transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+      onMouseDown={(e) => e.preventDefault()}
     >
       {theme === 'dark' ? (
         // Sun icon for dark mode

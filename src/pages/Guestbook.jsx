@@ -119,14 +119,14 @@ const Guestbook = ({ registerWithURL }) => {
 
   return (
     <section 
-      ref={setRefs} 
-      id="guestbook"
-      data-section="guestbook"
-      className="py-12 sm:py-16 bg-slate-50 dark:bg-slate-900 min-h-screen relative"
-      style={{
-        marginTop: '80px',
-        position: 'relative'
-      }}
+        ref={setRefs} 
+        id="guestbook"
+        data-section="guestbook"
+        className="py-12 sm:py-16 bg-slate-50 dark:bg-slate-900 min-h-screen relative"
+        style={{ 
+          position: 'relative',
+          scrollMarginTop: '120px'  // Add this line
+        }}
     >
       {/* Add invisible triggers at start and end */}
       <SectionTriggers sectionId="guestbook" />
@@ -171,7 +171,6 @@ const Guestbook = ({ registerWithURL }) => {
         className="w-full h-8" 
         id="guestbook-end-marker" 
         aria-hidden="true"
-        style={{ marginBottom: '40px' }}
       />
     </section>
   );
