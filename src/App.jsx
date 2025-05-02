@@ -1,5 +1,5 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -23,10 +23,10 @@ const Contact = lazy(() =>
 const RootLayout = () => {
   const { theme, listenToSystemThemeChanges } = useThemeStore();
   const [pageReady, setPageReady] = useState(false);
+  const location = useLocation();
   
   // Set up listener for system theme changes - do this only once
   useEffect(() => {
-    console.log('🌓 Setting up theme system listener');
     const unsubscribe = listenToSystemThemeChanges();
     
     // Apply theme on first render
@@ -39,8 +39,6 @@ const RootLayout = () => {
     // Mark page as ready after a small delay to ensure styles apply
     setTimeout(() => {
       setPageReady(true);
-      
-      // Apply icons-ready class to body after page is ready
       document.body.classList.add('icons-ready');
     }, 200);
     
@@ -48,6 +46,20 @@ const RootLayout = () => {
       if (unsubscribe) unsubscribe();
     };
   }, [listenToSystemThemeChanges]);
+
+  // Simplified scroll tracking for performance
+  useEffect(() => {
+    // Only track essential metrics
+    const handleScroll = () => {
+      // This is intentionally left minimal for performance
+    };
+    
+    // Add event listener once
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Clean up
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [location.pathname]);
 
   return (
     <ScrollProvider>
@@ -82,7 +94,7 @@ const router = createBrowserRouter([
       { path: "about", element: <MainLayout /> },
       { path: "projects", element: <MainLayout /> },
       { path: "guestbook", element: <MainLayout /> },
-      { path: "contact", element: <Contact /> }, // Make sure Contact is properly used here
+      { path: "contact", element: <Contact /> },
       { path: "*", element: <NotFound /> },
     ],
   }
@@ -102,7 +114,6 @@ function App() {
     const timer = setTimeout(() => {
       document.body.classList.remove('icons-loading');
       document.body.classList.add('icons-ready');
-      console.log('✅ Icons ready for display');
     }, 300);
     
     return () => clearTimeout(timer);

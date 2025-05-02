@@ -20,6 +20,13 @@
     --border: #e0e0e0;
     --surfaceBackground: #f9f9f9;
     --glassBackground: rgba(255, 255, 255, 0.8);
+    
+    /* Invisibility Cloak variables */
+    --color-bg: #f8fafc;
+    --color-bg-rgb: 248, 250, 252;
+    --cloak-color: #f8fafc;
+    --cloak-shadow: 0 -15px 30px #f8fafc, 0 -5px 10px #f8fafc;
+    --cloak-z-index: 1;
 
     /* Typography */
     --fontFamily: 'Roboto', system-ui, sans-serif;
@@ -37,6 +44,12 @@
     --border: #333333;
     --surfaceBackground: #1e1e1e;
     --glassBackground: rgba(30, 30, 30, 0.8);
+    
+    /* Dark mode cloak variables */
+    --color-bg: #0f172a;
+    --color-bg-rgb: 15, 23, 42;
+    --cloak-color: #0f172a;
+    --cloak-shadow: 0 -15px 30px #0f172a, 0 -5px 10px #0f172a;
   }
 
   /* Fix html element styles */
@@ -44,7 +57,19 @@
     scroll-behavior: smooth;
     scroll-padding-top: 120px;
     font-family: var(--fontFamily);
-    overscroll-behavior: none;
+    /* Completely hide scrollbar */
+    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Hide scrollbar on all browsers */
+  html::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+    background: transparent !important;
   }
 
   /* iOS Safari specific fix */
@@ -62,7 +87,16 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    overscroll-behavior: none;
+    overflow-y: auto;
+    /* Hide scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  body::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
   }
 
   h1 {
@@ -90,6 +124,11 @@
     max-width: 100%;
     height: auto;
     display: block;
+  }
+  
+  /* Make sure all scrollable elements don't show scrollbars */
+  * {
+    scrollbar-color: transparent transparent;
   }
 }
 
@@ -163,6 +202,39 @@
 
   .page-ready .icon-svg {
     opacity: 1;
+  }
+  
+  /* Hide scrollbars for all scrollable elements */
+  .hide-scrollbar::-webkit-scrollbar,
+  [data-carousel]::-webkit-scrollbar,
+  .overflow-auto::-webkit-scrollbar,
+  .overflow-y-auto::-webkit-scrollbar,
+  .overflow-x-auto::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
+    background: transparent !important;
+  }
+  
+  .hide-scrollbar,
+  [data-carousel],
+  .overflow-auto,
+  .overflow-y-auto,
+  .overflow-x-auto {
+    -ms-overflow-style: none !important;  /* IE and Edge */
+    scrollbar-width: none !important;     /* Firefox */
+  }
+  
+  /* Invisibility Cloak Component - Fixed version */
+  .invisibility-cloak {
+    @apply fixed left-0 right-0 w-full pointer-events-none;
+    background-color: var(--background); /* Use exact page background */
+    z-index: 0; /* Between skyline (-1) and content (2+) */
+    box-shadow: 0 -25px 40px var(--background), 0 -10px 15px var(--background); /* Enhanced multi-layered shadow */
+    transition: top 0.05s linear; /* More precise movement */
+    backdrop-filter: none; /* Ensure no visual effects are applied */
+    -webkit-backdrop-filter: none;
+    will-change: top; /* Optimize for position changes */
   }
 }
 
@@ -314,6 +386,28 @@
   cursor: grab !important;
 }
 
-.scrolling-active:active {
-  cursor: grabbing !important;
+/* Skyline and cloak related styles */
+.skyline-layer {
+  height: 25vh; /* Adjust height as needed */
+  width: 100%;
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+}
+
+/* Additional cloak support styles */
+.skyline-cloak-container {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Enhances the hard border effect of the cloak */
+.cloak-border-effect {
+  position: absolute;
+  height: 2px; /* Slightly thicker line */
+  left: 0;
+  right: 0;
+  background: var(--background);
+  box-shadow: 0 -20px 30px var(--background), 0 -5px 10px var(--background); /* Multi-layered shadow */
 }

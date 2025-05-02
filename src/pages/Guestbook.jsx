@@ -30,22 +30,25 @@ const Guestbook = ({ registerWithURL }) => {
   // Preload the Home section for circular navigation
   useProgressiveLoading(['/src/pages/Home.jsx']);
 
-  // Enhanced scroll to top
+  // Enhanced scroll to top - ensure it doesn't interfere with scroll tracking
   const handleScrollToTop = () => {
     try {
-      scrollToSection('home');
-      setTimeout(() => {
-        const scrollY = window.scrollY;
-        const documentHeight = document.documentElement.scrollHeight;
-        const windowHeight = window.innerHeight;
+      // Use requestAnimationFrame to ensure we don't interfere with scroll tracking
+      requestAnimationFrame(() => {
+        scrollToSection('home');
         
-        if (scrollY > windowHeight / 2) {
-          window.scrollTo({ 
-            top: 0, 
-            behavior: 'smooth' 
-          });
-        }
-      }, 100);
+        setTimeout(() => {
+          const scrollY = window.scrollY;
+          const windowHeight = window.innerHeight;
+          
+          if (scrollY > windowHeight / 2) {
+            window.scrollTo({ 
+              top: 0, 
+              behavior: 'smooth' 
+            });
+          }
+        }, 100);
+      });
     } catch (error) {
       console.error("Error scrolling to top:", error);
       // Direct fallback if the primary method throws an error
@@ -117,6 +120,32 @@ const Guestbook = ({ registerWithURL }) => {
     setEntries(prevEntries => [newEntry, ...prevEntries]);
   };
 
+  // Log scroll interactions with this section for debugging
+  useEffect(() => {
+    const guestbookSection = sectionRef.current;
+    if (!guestbookSection) return;
+    
+    const logScroll = () => {
+      const rect = guestbookSection.getBoundingClientRect();
+      const isInView = rect.top < window.innerHeight && rect.bottom > 0;
+      
+      if (isInView) {
+        console.log('📜 Guestbook scroll position:', {
+          top: rect.top,
+          bottom: rect.bottom,
+          visibility: Math.min(1, Math.max(0, 
+            (window.innerHeight - rect.top) / 
+            (window.innerHeight + rect.height - 200)
+          ))
+        });
+      }
+    };
+    
+    // Use passive true to ensure we don't block scroll events
+    window.addEventListener('scroll', logScroll, { passive: true });
+    return () => window.removeEventListener('scroll', logScroll);
+  }, []);
+
   return (
     <section 
         ref={setRefs} 
@@ -125,7 +154,8 @@ const Guestbook = ({ registerWithURL }) => {
         className="py-12 sm:py-16 bg-slate-50 dark:bg-slate-900 min-h-screen relative"
         style={{ 
           position: 'relative',
-          scrollMarginTop: '120px'  // Add this line
+          scrollMarginTop: '120px',
+          scrollBehavior: 'smooth' // Ensure smooth scrolling
         }}
     >
       {/* Add invisible triggers at start and end */}
@@ -152,18 +182,35 @@ const Guestbook = ({ registerWithURL }) => {
           guestbookText={currentGuestbookText}
         />
 
-        {/* Entries list component */}
-        <GuestbookEntryList
-          entries={entries}
-          loading={loading}
-          error={error}
-          animationRef={animationRef}
-          animationInView={animationInView}
-          containerVariants={containerVariants}
-          itemVariants={itemVariants}
-          isMobile={isMobile}
-          guestbookText={currentGuestbookText}
-        />
+        {/* Entries list component - use hide-scrollbar class for any scrollable container */}
+        <div className="entries-container">
+          <GuestbookEntryList
+            entries={entries}
+            loading={loading}
+            error={error}
+            animationRef={animationRef}
+            animationInView={animationInView}
+            containerVariants={containerVariants}
+            itemVariants={itemVariants}
+            isMobile={isMobile}
+            guestbookText={currentGuestbookText}
+          />
+        </div>
+      </div>
+      
+      {/* Back to top button - ensure it doesn't interfere with scrolling */}
+      <div className="flex justify-center mt-12">
+        <button
+          onClick={handleScrollToTop}
+          className="rounded-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-6 
+                    transition-colors duration-300 inline-flex items-center gap-2"
+          aria-label="Back to top"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m18 15-6-6-6 6"/>
+          </svg>
+          {currentGuestbookText.backToTop || "Back to top"}
+        </button>
       </div>
       
       {/* Bottom marker for consistent spacing */}

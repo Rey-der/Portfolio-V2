@@ -4,6 +4,57 @@ const ScrollContext = createContext();
 
 export const useScroll = () => useContext(ScrollContext);
 
+// Debug flag - enable this for detailed logging
+const DEBUG_SCROLL = false;
+
+// Minimum scroll change needed to log (px)
+const MIN_SCROLL_CHANGE_TO_LOG = 20;
+
+// Helper function for logging with timestamp and rate limiting
+const logWithTime = (() => {
+  let lastLoggedPosition = 0;
+  let lastLogTime = 0;
+  let throttledMessages = {};
+  
+  return (message, data, forceLog = false, scrollY = null) => {
+    if (!DEBUG_SCROLL) return;
+    
+    const now = Date.now();
+    
+    // If this is a scroll position update, check if it's significant enough to log
+    if (scrollY !== null && !forceLog) {
+      // Only log if position changed significantly or it's been a while
+      const positionChange = Math.abs(scrollY - lastLoggedPosition);
+      const timeChange = now - lastLogTime;
+      
+      if (positionChange < MIN_SCROLL_CHANGE_TO_LOG && timeChange < 1000) {
+        return; // Skip logging for minor scroll changes
+      }
+      
+      lastLoggedPosition = scrollY;
+      lastLogTime = now;
+    }
+    
+    // For other repetitive messages, throttle them
+    if (!forceLog && (message.startsWith('Section #') || 
+        message === 'CALCULATING SECTION VISIBILITY:' || 
+        message === 'SECTIONS IN VIEW:')) {
+      // Throttle these frequent messages
+      if (throttledMessages[message] && now - throttledMessages[message] < 1000) {
+        return;
+      }
+      throttledMessages[message] = now;
+    }
+    
+    const timestamp = new Date().toLocaleTimeString() + '.' + String(Date.now() % 1000).padStart(3, '0');
+    console.log(
+      `%c🔍 [${timestamp}] ${message}`, 
+      'background: #4a148c; color: white; padding: 2px 5px; border-radius: 3px;',
+      data || ''
+    );
+  };
+})();
+
 export const ScrollProvider = ({ children }) => {
   // State for active section
   const [activeSection, setActiveSection] = useState('home');
@@ -18,6 +69,9 @@ export const ScrollProvider = ({ children }) => {
   const sectionsRef = useRef({});
   const isProgrammaticScrollRef = useRef(false);
   const isScrollingRef = useRef(false);
+  
+  // Separate timeout ref for scroll debouncing
+  const scrollTimeoutRef = useRef(null);
   
   // Configurable settings - now using state so they can be updated
   const [settings, setSettings] = useState({
@@ -37,22 +91,35 @@ export const ScrollProvider = ({ children }) => {
   // Track the last time the active section was updated
   const lastUpdateTimestamp = useRef(Date.now());
   
+  // Track position of native scroll
+  const nativeScrollYRef = useRef(0);
+  const lastNativeScrollEventTime = useRef(Date.now());
+  const scrollEventCount = useRef(0);
+  
+  // IMPROVED: Add ref for last broadcast to avoid stale closures
+  const lastBroadcastRef = useRef({
+    scrollY: 0,
+    timestamp: 0,
+    count: 0
+  });
+  
   // Function to update settings dynamically - exposed to DebugPanel
   const updateSettings = useCallback((newSettings) => {
-    console.log('ScrollContext - updating settings:', newSettings);
+    logWithTime('ScrollContext - updating settings:', newSettings, true);
     setSettings(newSettings);
   }, []);
   
   // Add console logging for activeSection changes
   useEffect(() => {
-    console.log('ScrollContext - activeSection changed:', activeSection);
+    logWithTime('ScrollContext - activeSection changed:', activeSection, true);
     
     // Dispatch a section-change event when activeSection changes
     if (activeSection) {
-      console.log('ScrollContext - dispatching section-change event:', activeSection);
+      logWithTime('ScrollContext - dispatching section-change event:', activeSection, true);
       document.dispatchEvent(
         new CustomEvent('section-change', {
           detail: {
+            section: activeSection,
             sectionId: activeSection,
             path: activeSection === 'home' ? '/' : `/${activeSection}`,
             settings: settings // Include current settings in the event
@@ -62,27 +129,98 @@ export const ScrollProvider = ({ children }) => {
     }
   }, [activeSection, settings]);
   
-  // Track scroll position
+  // IMPROVED: Access window scroll value directly to ensure latest values
+  const getScrollY = useCallback(() => {
+    return window._scrollY !== undefined ? window._scrollY : window.scrollY;
+  }, []);
+  
+  // Track scroll position with enhanced logging
   useEffect(() => {
+    // IMPROVED: Get the initial scroll position directly
+    const initialScrollY = getScrollY();
+    let lastSignificantScrollY = initialScrollY;
+    nativeScrollYRef.current = initialScrollY;
+    prevScrollYRef.current = initialScrollY;
+    
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      // FIXED: Always get fresh scroll position directly from window
+      const currentScrollY = getScrollY();
+      const now = Date.now();
+      scrollEventCount.current++;
+      
+      // Store native scroll position for comparison
+      nativeScrollYRef.current = currentScrollY;
+      
+      // Only log significant scroll changes
+      const scrollChange = Math.abs(currentScrollY - lastSignificantScrollY);
+      const timeSinceLastLog = now - lastNativeScrollEventTime.current;
+      
+      if (scrollChange >= MIN_SCROLL_CHANGE_TO_LOG || timeSinceLastLog > 1000) {
+        logWithTime('NATIVE SCROLL EVENT:', {
+          position: Math.round(currentScrollY),
+          delta: Math.round(currentScrollY - prevScrollYRef.current),
+          direction: currentScrollY > prevScrollYRef.current ? '↓' : '↑',
+          scrollEventCount: scrollEventCount.current,
+          timeSinceLast: timeSinceLastLog + 'ms'
+        }, false, currentScrollY);
+        
+        lastNativeScrollEventTime.current = now;
+        lastSignificantScrollY = currentScrollY;
+      }
+      
+      // IMPORTANT: Always update state with fresh value
       setScrollY(currentScrollY);
       
-      // Detect scroll direction
-      setScrollDirection(currentScrollY > prevScrollYRef.current ? 'down' : 'up');
+      // Detect scroll direction using direct window values
+      const newDirection = currentScrollY > prevScrollYRef.current ? 'down' : 'up';
+      if (newDirection !== scrollDirection) {
+        logWithTime('SCROLL DIRECTION CHANGED:', {
+          from: scrollDirection,
+          to: newDirection,
+          position: Math.round(currentScrollY),
+          delta: Math.round(currentScrollY - prevScrollYRef.current)
+        }, true, currentScrollY);
+        
+        setScrollDirection(newDirection);
+      }
+      
       prevScrollYRef.current = currentScrollY;
       
       // Set scrolling flag with debounce
       isScrollingRef.current = true;
-      clearTimeout(isScrollingRef.current.timeoutId);
-      isScrollingRef.current.timeoutId = setTimeout(() => {
+      
+      // Clear previous timeout if it exists
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      // Set new timeout
+      scrollTimeoutRef.current = setTimeout(() => {
         isScrollingRef.current = false;
+        // IMPROVED: Always get fresh scroll position for final position
+        const finalY = getScrollY();
+        logWithTime('SCROLL ENDED:', {
+          finalPosition: Math.round(finalY),
+          isProgrammatic: isProgrammaticScrollRef.current
+        }, true, finalY);
       }, 100);
     };
     
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    // IMPORTANT: Use capture and passive for best performance
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    
+    logWithTime('SCROLL TRACKING INITIALIZED', {
+      initialScrollY: initialScrollY,
+      registeredSections
+    }, true);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll, { capture: true });
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [scrollDirection, getScrollY]);
   
   // Process section registration
   const registerSection = useCallback((sectionId, ref) => {
@@ -91,14 +229,14 @@ export const ScrollProvider = ({ children }) => {
       return () => {};
     }
     
-    console.log(`ScrollContext - registering section: ${sectionId}`);
+    logWithTime(`ScrollContext - registering section: ${sectionId}`, null, true);
     sectionsRef.current[sectionId] = ref;
     
     // Only update registered sections if this is a new one
     setRegisteredSections(prevSections => {
       if (!prevSections.includes(sectionId)) {
         const newSections = [...prevSections, sectionId];
-        console.log('ScrollContext - updated registered sections:', newSections);
+        logWithTime('ScrollContext - updated registered sections:', newSections, true);
         return newSections;
       }
       return prevSections;
@@ -106,7 +244,7 @@ export const ScrollProvider = ({ children }) => {
     
     // Return cleanup function
     return () => {
-      console.log(`ScrollContext - unregistering section: ${sectionId}`);
+      logWithTime(`ScrollContext - unregistering section: ${sectionId}`, null, true);
       delete sectionsRef.current[sectionId];
       setRegisteredSections(prevSections => prevSections.filter(id => id !== sectionId));
     };
@@ -117,7 +255,11 @@ export const ScrollProvider = ({ children }) => {
     const handleSectionChangeFromURL = (event) => {
       // Only update if it's not already the active section
       if (event.detail.sectionId && event.detail.sectionId !== activeSection) {
-        console.log(`ScrollContext - received URL section change to: ${event.detail.sectionId}`);
+        logWithTime(`ScrollContext - received URL section change to: ${event.detail.sectionId}`, {
+          fromSection: activeSection,
+          fromURL: window.location.pathname
+        }, true);
+        
         setActiveSection(event.detail.sectionId);
       }
     };
@@ -130,21 +272,44 @@ export const ScrollProvider = ({ children }) => {
     };
   }, [activeSection]);
   
-  // Update sectionsInView without directly controlling observers
-  // This provides visibility info for other components while letting
-  // ScrollURLUpdate handle the actual URL updates
+  // Update sectionsInView with enhanced visibility logging
   useEffect(() => {
+    let lastUpdateTime = 0;
+    const minUpdateInterval = 250; // Limit updates to once every 250ms
+    
     const updateSectionsVisibility = () => {
-      // Skip if doing programmatic scrolling
-      if (isProgrammaticScrollRef.current) return;
+      const now = Date.now();
       
+      // Skip if doing programmatic scrolling
+      if (isProgrammaticScrollRef.current) {
+        logWithTime('SKIPPING VISIBILITY UPDATE - programmatic scroll in progress', null, true);
+        return;
+      }
+      
+      // Skip if it's too soon for another update
+      if (now - lastUpdateTime < minUpdateInterval) {
+        return;
+      }
+      
+      lastUpdateTime = now;
       const viewportHeight = window.innerHeight;
       const sectionsArray = [];
+      // FIXED: Get scroll position directly
+      const nativeScrollY = getScrollY();
+      
+      logWithTime('CALCULATING SECTION VISIBILITY:', {
+        scrollY: Math.round(nativeScrollY),
+        viewportHeight,
+        registeredSections
+      }, false, nativeScrollY);
       
       // Get all registered section elements
       registeredSections.forEach(sectionId => {
         const section = document.getElementById(sectionId);
-        if (!section) return;
+        if (!section) {
+          logWithTime(`⚠️ Section element not found: #${sectionId}`, null, true);
+          return;
+        }
         
         const rect = section.getBoundingClientRect();
         
@@ -153,6 +318,19 @@ export const ScrollProvider = ({ children }) => {
         const visibleBottom = Math.min(viewportHeight, rect.bottom);
         const visibleHeight = Math.max(0, visibleBottom - visibleTop);
         const visibility = visibleHeight / viewportHeight;
+        
+        // Only log significant visibility values
+        if (visibility > 0.05) {
+          logWithTime(`Section #${sectionId} visibility:`, {
+            visibility: visibility.toFixed(2),
+            top: Math.round(rect.top),
+            bottom: Math.round(rect.bottom),
+            height: Math.round(rect.height),
+            visibleHeight: Math.round(visibleHeight),
+            scrollY: Math.round(nativeScrollY),
+            offsetTop: Math.round(section.offsetTop)
+          }, false, nativeScrollY);
+        }
         
         // Add to the array if visible
         if (visibility > 0) {
@@ -163,6 +341,7 @@ export const ScrollProvider = ({ children }) => {
         }
       });
       
+      logWithTime('SECTIONS IN VIEW:', sectionsArray, false, nativeScrollY);
       setSectionsInView(sectionsArray);
       
       // Find best visible section for context state
@@ -182,11 +361,27 @@ export const ScrollProvider = ({ children }) => {
           }
         });
         
+        // Only log if there's a best section candidate
+        if (bestSection) {
+          logWithTime('BEST VISIBLE SECTION CANDIDATE:', {
+            bestSection,
+            bestVisibility,
+            currentActive: activeSection,
+            timeSinceLastUpdate: now - lastUpdateTimestamp.current,
+            updateThreshold: settings.minUpdateInterval
+          }, false, nativeScrollY);
+        }
+        
         // Only update if we have a good visible section and enough time has passed
-        if (bestSection && Date.now() - lastUpdateTimestamp.current > settings.minUpdateInterval) {
+        if (bestSection && now - lastUpdateTimestamp.current > settings.minUpdateInterval) {
           if (bestSection !== activeSection) {
+            logWithTime(`🔄 SECTION CHANGE: ${activeSection} -> ${bestSection}`, {
+              visibility: bestVisibility,
+              scrollY: Math.round(nativeScrollY)
+            }, true, nativeScrollY);
+            
             setActiveSection(bestSection);
-            lastUpdateTimestamp.current = Date.now();
+            lastUpdateTimestamp.current = now;
           }
         }
       }
@@ -196,24 +391,32 @@ export const ScrollProvider = ({ children }) => {
     updateSectionsVisibility();
     
     // Set up a throttled scroll listener for visibility tracking
+    let scrollThrottleTimeout = null;
     const handleScroll = () => {
-      // Throttle updates
-      if (!isScrollingRef.current.throttleId) {
-        isScrollingRef.current.throttleId = setTimeout(() => {
-          updateSectionsVisibility();
-          isScrollingRef.current.throttleId = null;
-        }, 100);
-      }
+      // Throttle updates more aggressively
+      if (scrollThrottleTimeout) return;
+      
+      scrollThrottleTimeout = setTimeout(() => {
+        updateSectionsVisibility();
+        scrollThrottleTimeout = null;
+      }, 200); // Increased to 200ms for better performance
     };
     
-    // Add events for visibility tracking
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Add events for visibility tracking - use capture to get early
+    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
     window.addEventListener('resize', updateSectionsVisibility);
     
-    // Set up mutation observer for DOM changes
+    // Set up mutation observer for DOM changes - with less frequent updates
+    let mutationThrottleTimeout = null;
     const observer = new MutationObserver(() => {
-      // If DOM changes, update section visibility after a short delay
-      setTimeout(updateSectionsVisibility, 50);
+      // If DOM changes, throttle updates
+      if (mutationThrottleTimeout) return;
+      
+      mutationThrottleTimeout = setTimeout(() => {
+        logWithTime('DOM CHANGED - updating section visibility', null, true);
+        updateSectionsVisibility();
+        mutationThrottleTimeout = null;
+      }, 300);
     });
     
     observer.observe(document.body, {
@@ -224,14 +427,18 @@ export const ScrollProvider = ({ children }) => {
     });
     
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('scroll', handleScroll, { capture: true });
       window.removeEventListener('resize', updateSectionsVisibility);
       observer.disconnect();
-      clearTimeout(isScrollingRef.current.throttleId);
+      clearTimeout(scrollThrottleTimeout);
+      clearTimeout(mutationThrottleTimeout);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
     };
-  }, [registeredSections, activeSection, settings]);
+  }, [registeredSections, activeSection, settings, getScrollY]);
   
-  // Scroll to section implementation
+  // Scroll to section implementation with enhanced logging
   const scrollToSection = useCallback((sectionId) => {
     const section = document.getElementById(sectionId);
     if (!section) {
@@ -239,7 +446,14 @@ export const ScrollProvider = ({ children }) => {
       return false;
     }
     
-    console.log(`ScrollContext - scrolling to section: ${sectionId}`);
+    // FIXED: Get scroll position directly
+    const currentScrollY = getScrollY();
+    
+    logWithTime(`ScrollContext - SCROLLING TO SECTION: ${sectionId}`, {
+      fromSection: activeSection,
+      currentScrollY: Math.round(currentScrollY),
+      targetScrollY: Math.round(section.offsetTop)
+    }, true);
     
     try {
       // Mark that we are doing a programmatic scroll
@@ -247,7 +461,16 @@ export const ScrollProvider = ({ children }) => {
       
       // Calculate offset for fixed header
       const headerHeight = 60; // Should match your header height
+      const sectionOffsetTop = section.offsetTop;
       const top = section.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+      
+      logWithTime(`SCROLL DETAILS:`, {
+        sectionId,
+        offsetTop: Math.round(sectionOffsetTop),
+        calculatedPosition: Math.round(top),
+        headerOffset: headerHeight,
+        boundingClientRectTop: Math.round(section.getBoundingClientRect().top)
+      }, true);
       
       // Scroll with smooth behavior
       window.scrollTo({
@@ -258,8 +481,29 @@ export const ScrollProvider = ({ children }) => {
       // Update active section
       setActiveSection(sectionId);
       
+      // Broadcast this as a section change event
+      document.dispatchEvent(
+        new CustomEvent('section-change', {
+          detail: {
+            section: sectionId,
+            sectionId: sectionId,
+            path: sectionId === 'home' ? '/' : `/${sectionId}`,
+            programmatic: true
+          }
+        })
+      );
+      
       // Reset programmatic scroll flag after animation completes
       setTimeout(() => {
+        // FIXED: Get position directly
+        const finalScrollY = getScrollY();
+        
+        logWithTime(`PROGRAMMATIC SCROLL COMPLETED:`, {
+          sectionId,
+          finalScrollY: Math.round(finalScrollY),
+          targetScrollY: Math.round(sectionOffsetTop)
+        }, true);
+        
         isProgrammaticScrollRef.current = false;
       }, 1000);
       
@@ -269,11 +513,17 @@ export const ScrollProvider = ({ children }) => {
       isProgrammaticScrollRef.current = false;
       return false;
     }
-  }, []);
+  }, [activeSection, getScrollY]);
   
   // Helper to scroll to top
   const scrollToTop = useCallback(() => {
-    console.log('ScrollContext - scrolling to top');
+    // FIXED: Get position directly
+    const currentScrollY = getScrollY();
+    
+    logWithTime('ScrollContext - scrolling to top', {
+      fromSection: activeSection,
+      currentScrollY: Math.round(currentScrollY)
+    }, true);
     
     try {
       // Mark that we are doing a programmatic scroll
@@ -288,8 +538,27 @@ export const ScrollProvider = ({ children }) => {
       // Update active section to home
       setActiveSection('home');
       
+      // Broadcast this as a section change event
+      document.dispatchEvent(
+        new CustomEvent('section-change', {
+          detail: {
+            section: 'home',
+            sectionId: 'home',
+            path: '/',
+            programmatic: true
+          }
+        })
+      );
+      
       // Reset programmatic scroll flag after animation completes
       setTimeout(() => {
+        // FIXED: Get position directly
+        const finalScrollY = getScrollY();
+        
+        logWithTime(`SCROLL TO TOP COMPLETED:`, {
+          finalScrollY: Math.round(finalScrollY)
+        }, true);
+        
         isProgrammaticScrollRef.current = false;
       }, 1000);
       
@@ -299,7 +568,74 @@ export const ScrollProvider = ({ children }) => {
       isProgrammaticScrollRef.current = false;
       return false;
     }
-  }, []);
+  }, [activeSection, getScrollY]);
+  
+  // IMPROVED: Broadcast scroll position with better reliability
+  const broadcastScrollPosition = useCallback(() => {
+    // FIXED: Always get fresh scroll position
+    const currentScrollY = getScrollY();
+    const now = Date.now();
+    
+    // Get refs to avoid closure problems
+    const lastBroadcast = lastBroadcastRef.current;
+    
+    // Only broadcast if scroll position changed significantly 
+    if (Math.abs(currentScrollY - lastBroadcast.scrollY) >= MIN_SCROLL_CHANGE_TO_LOG * 1.5) {
+      // Update the ref with latest values
+      lastBroadcast.scrollY = currentScrollY;
+      lastBroadcast.timestamp = now;
+      lastBroadcast.count++;
+      
+      // Get current visible section from state or activeSection as fallback
+      const currentSection = activeSection;
+      
+      // Create and dispatch the event
+      const scrollEvent = new CustomEvent('scroll-position-update', {
+        detail: {
+          current: currentScrollY,
+          section: currentSection,
+          source: 'scroll-context',
+          sequence: lastBroadcast.count,
+          timestamp: now
+        }
+      });
+      
+      document.dispatchEvent(scrollEvent);
+      
+      logWithTime(`📢 SCROLL BROADCAST #${lastBroadcast.count}:`, {
+        position: Math.round(currentScrollY),
+        section: currentSection
+      }, false, currentScrollY);
+    }
+  }, [activeSection, getScrollY]);
+  
+  // Add a scroll position broadcast for parallax effects with reduced frequency
+  useEffect(() => {
+    // Initialize the last broadcast ref
+    lastBroadcastRef.current = {
+      scrollY: getScrollY(),
+      timestamp: Date.now(),
+      count: 0
+    };
+    
+    // Add throttled scroll listener for broadcasting with larger delay
+    let broadcastThrottleTimeout = null;
+    const handleScrollForBroadcast = () => {
+      if (broadcastThrottleTimeout) return;
+      
+      broadcastThrottleTimeout = setTimeout(() => {
+        broadcastScrollPosition();
+        broadcastThrottleTimeout = null;
+      }, 150); // Increased delay for better performance
+    };
+    
+    window.addEventListener('scroll', handleScrollForBroadcast, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', handleScrollForBroadcast);
+      clearTimeout(broadcastThrottleTimeout);
+    };
+  }, [broadcastScrollPosition, getScrollY]);
   
   return (
     <ScrollContext.Provider
@@ -317,6 +653,14 @@ export const ScrollProvider = ({ children }) => {
         updateSettings,
         isProgrammaticScroll: () => isProgrammaticScrollRef.current,
         getSections: () => ({ ...sectionsRef.current }),
+        // Add debugging helper
+        getScrollDebugInfo: () => ({
+          nativeScrollY: getScrollY(),  // FIXED: Get direct value
+          activeSection,
+          programmatic: isProgrammaticScrollRef.current,
+          direction: scrollDirection,
+          sectionsInView
+        })
       }}
     >
       {children}

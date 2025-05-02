@@ -31,7 +31,10 @@ const useSideScroll = ({
     maxDirectionChanges: 5,          // Maximum direction changes before freezing
     timeWindowMs: 1000,              // Time window to count direction changes (in ms)
     freezeDurationMs: 500            // Time to freeze carousel after excessive wiggling
-  }
+  },
+  
+  // New option to control scroll event propagation - ALWAYS TRUE to fix scroll tracking
+  allowScrollPropagation = true
 }) => {
   const containerRef = useRef(null);
   const [partialProgress, setPartialProgress] = useState(0);
@@ -59,8 +62,22 @@ const useSideScroll = ({
     freezeTimeout: null,          // Timeout to unfreeze carousel
     lastWiggleCheckTime: 0,        // Last time we checked for wiggling
     
-    isScrolling: false            // NEW: Flag to indicate active scrolling
+    isScrolling: false,           // Flag to indicate active scrolling
+    preventVerticalScroll: false  // Flag to indicate if we should prevent vertical scrolling
   });
+
+  // Helper function to check if element is a carousel container
+  const isCarouselElement = useCallback((element) => {
+    if (!element) return false;
+    
+    // Check for carousel elements - we'll use data attributes
+    return (
+      element.hasAttribute('data-carousel') || 
+      element.closest('[data-carousel]') ||
+      element.classList.contains('carousel') ||
+      element.closest('.carousel')
+    );
+  }, []);
 
   // Helper function to cap accumulated delta
   const capAccumulatedDelta = useCallback((value) => {
@@ -106,26 +123,37 @@ const useSideScroll = ({
     return false;
   }, [wiggleConfig.maxDirectionChanges, wiggleConfig.timeWindowMs, wiggleConfig.freezeDurationMs]);
 
-  // NEW: Function to disable text selection
+  // Function to disable text selection
   const disableTextSelection = useCallback(() => {
     document.body.classList.add('disable-text-selection');
   }, []);
 
-  // NEW: Function to enable text selection
+  // Function to enable text selection
   const enableTextSelection = useCallback(() => {
     document.body.classList.remove('disable-text-selection');
   }, []);
 
   // Handle trackpad/mouse wheel scrolling
   const handleWheel = useCallback((e) => {
-    // Only handle horizontal wheel events, let vertical ones propagate normally
-    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-      return;
+    // IMPROVED DETECTION: Calculate scroll direction intention
+    const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.2;
+    const isVerticalScroll = Math.abs(e.deltaY) > Math.abs(e.deltaX) * 1.2;
+    
+    // Check if this is actually a carousel element
+    const isCarousel = isCarouselElement(e.target);
+    
+    // For vertical scrolling, NEVER interfere with the main page scroll
+    if (isVerticalScroll || !isCarousel) {
+      return; // Let vertical scrolls pass through completely
     }
     
-    // Only prevent default for horizontal scrolling to keep vertical scrolling working
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+    // For horizontal scrolling on carousel elements, use our handler
+    if (isHorizontalScroll && isCarousel) {
+      // Only prevent default for strongly horizontal scrolling on carousel elements
       e.preventDefault();
+    } else if (!isCarousel) {
+      // Don't interfere with non-carousel scrolling
+      return;
     }
 
     const now = Date.now();
@@ -208,8 +236,8 @@ const useSideScroll = ({
       setPartialProgress(normalizedProgress);
     }
     
-    // NEW: Disable text selection during scrolling
-    if (!state.isScrolling) {
+    // Only disable text selection for carousel elements
+    if (!state.isScrolling && isCarousel) {
       disableTextSelection();
       state.isScrolling = true;
     }
@@ -251,7 +279,7 @@ const useSideScroll = ({
       setTimeout(() => {
         state.isInCooldown = false;
         
-        // NEW: Re-enable text selection after cooldown
+        // Re-enable text selection after cooldown
         enableTextSelection();
         state.isScrolling = false;
       }, cooldown);
@@ -294,7 +322,7 @@ const useSideScroll = ({
       // Reset wiggle detection state
       state.directionChangeTimestamps = [];
       
-      // NEW: Re-enable text selection after scrolling stops
+      // Re-enable text selection after scrolling stops
       enableTextSelection();
       state.isScrolling = false;
     }, state.slowScrollMode ? cooldown / 2 : cooldown);
@@ -311,11 +339,16 @@ const useSideScroll = ({
     capAccumulatedDelta,
     checkExcessiveWiggling,
     disableTextSelection,
-    enableTextSelection
+    enableTextSelection,
+    isCarouselElement,
   ]);
 
   // Handle touch events for mobile devices
   const handleTouchStart = useCallback((e) => {
+    // Check if this is actually a carousel element
+    const isCarousel = isCarouselElement(e.target);
+    if (!isCarousel) return;
+    
     const state = scrollState.current;
     
     // Don't start new touch interaction if carousel is frozen
@@ -327,18 +360,38 @@ const useSideScroll = ({
     state.touchStartTime = Date.now();
     state.touchMoves = [];
     state.directionChangeTimestamps = [];
+    state.preventVerticalScroll = false; // Reset on touch start
     
-    // NEW: Disable text selection on touch start
+    // Disable text selection on touch start
     disableTextSelection();
     state.isScrolling = true;
-  }, [disableTextSelection]);
+  }, [disableTextSelection, isCarouselElement]);
 
   const handleTouchMove = useCallback((e) => {
     const state = scrollState.current;
     if (!state.isTouching || state.isCarouselFrozen) return;
     
     const touchX = e.touches[0].clientX;
+    const touchY = e.touches[0].clientY;
     const deltaX = state.touchStartX - touchX;
+    const deltaY = state.touchStartY - touchY;
+    
+    // Check if this is a carousel element
+    const isCarousel = isCarouselElement(e.target);
+    
+    // Determine direction on first significant move
+    if (!state.preventVerticalScroll && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+      // If more horizontal than vertical AND on a carousel, we'll handle this swipe
+      state.preventVerticalScroll = Math.abs(deltaX) > Math.abs(deltaY) * 1.2 && isCarousel;
+    }
+    
+    // If this is not a horizontal swipe on a carousel, let the browser handle it
+    if (!state.preventVerticalScroll) {
+      return;
+    }
+    
+    // This is a horizontal swipe on a carousel, prevent default to handle it ourselves
+    e.preventDefault();
     
     // Track touch movement times and positions for velocity calculation
     state.touchMoves.push({
@@ -349,62 +402,57 @@ const useSideScroll = ({
       state.touchMoves.shift();
     }
     
-    // Only handle horizontal swipes 
-    if (Math.abs(deltaX) > 10) {
-      e.preventDefault(); // Prevent page scrolling
+    const scrollDirection = deltaX > 0 ? 1 : -1;
+    
+    // Detect direction changes for wiggle detection
+    if (state.touchMoves.length >= 3) {
+      const prevMove = state.touchMoves[state.touchMoves.length - 2];
+      const prevDirection = prevMove.position < touchX ? -1 : 1;
       
-      const scrollDirection = deltaX > 0 ? 1 : -1;
-      
-      // Detect direction changes for wiggle detection
-      if (state.touchMoves.length >= 3) {
-        const prevMove = state.touchMoves[state.touchMoves.length - 2];
-        const prevDirection = prevMove.position < touchX ? -1 : 1;
+      if (prevDirection !== scrollDirection) {
+        // Check if this direction change makes wiggling excessive
+        const isWigglingExcessive = checkExcessiveWiggling();
         
-        if (prevDirection !== scrollDirection) {
-          // Check if this direction change makes wiggling excessive
-          const isWigglingExcessive = checkExcessiveWiggling();
-          
-          // If wiggling is now excessive, stop processing this event
-          if (isWigglingExcessive) {
-            return;
-          }
+        // If wiggling is now excessive, stop processing this event
+        if (isWigglingExcessive) {
+          return;
         }
-      }
-      
-      // Calculate if this is a slow swipe by measuring velocity
-      let isSlowSwipe = true;
-      if (state.touchMoves.length >= 2) {
-        const first = state.touchMoves[0];
-        const last = state.touchMoves[state.touchMoves.length - 1];
-        const timeDiff = last.time - first.time;
-        const posDiff = Math.abs(last.position - first.position);
-        
-        if (timeDiff > 0) {
-          // Calculate swipe velocity in px/ms
-          const velocity = posDiff / timeDiff;
-          isSlowSwipe = velocity < 0.5; // Adjust threshold as needed
-        }
-      }
-      
-      // Use different factor for slow vs fast swipes
-      let factor = isSlowSwipe ? 
-                  swipeSpeeds.translationFactorSingle * 2.0 :
-                  swipeSpeeds.translationFactorSingle;
-      
-      // Cap the accumulated delta to prevent overflow
-      state.accumulatedDeltaX = capAccumulatedDelta(deltaX * factor);
-      
-      // Handle partial animation for swipes
-      if (enablePartialSlide) {
-        const divisor = isSlowSwipe ? threshold * 0.6 : threshold * 2;
-        const normalizedProgress = Math.min(
-          0.5,
-          Math.max(-0.5, state.accumulatedDeltaX / divisor)
-        );
-        setPartialProgress(normalizedProgress);
       }
     }
-  }, [threshold, enablePartialSlide, swipeSpeeds.translationFactorSingle, capAccumulatedDelta, checkExcessiveWiggling]);
+    
+    // Calculate if this is a slow swipe by measuring velocity
+    let isSlowSwipe = true;
+    if (state.touchMoves.length >= 2) {
+      const first = state.touchMoves[0];
+      const last = state.touchMoves[state.touchMoves.length - 1];
+      const timeDiff = last.time - first.time;
+      const posDiff = Math.abs(last.position - first.position);
+      
+      if (timeDiff > 0) {
+        // Calculate swipe velocity in px/ms
+        const velocity = posDiff / timeDiff;
+        isSlowSwipe = velocity < 0.5; // Adjust threshold as needed
+      }
+    }
+    
+    // Use different factor for slow vs fast swipes
+    let factor = isSlowSwipe ? 
+                swipeSpeeds.translationFactorSingle * 2.0 :
+                swipeSpeeds.translationFactorSingle;
+    
+    // Cap the accumulated delta to prevent overflow
+    state.accumulatedDeltaX = capAccumulatedDelta(deltaX * factor);
+    
+    // Handle partial animation for swipes
+    if (enablePartialSlide) {
+      const divisor = isSlowSwipe ? threshold * 0.6 : threshold * 2;
+      const normalizedProgress = Math.min(
+        0.5,
+        Math.max(-0.5, state.accumulatedDeltaX / divisor)
+      );
+      setPartialProgress(normalizedProgress);
+    }
+  }, [threshold, enablePartialSlide, swipeSpeeds.translationFactorSingle, capAccumulatedDelta, checkExcessiveWiggling, isCarouselElement]);
 
   const handleTouchEnd = useCallback((e) => {
     const state = scrollState.current;
@@ -463,7 +511,7 @@ const useSideScroll = ({
       setTimeout(() => {
         state.isInCooldown = false;
         
-        // NEW: Re-enable text selection after cooldown
+        // Re-enable text selection after cooldown
         enableTextSelection();
         state.isScrolling = false;
       }, cooldown);
@@ -475,8 +523,9 @@ const useSideScroll = ({
     setPartialProgress(0);
     state.touchMoves = [];
     state.directionChangeTimestamps = [];
+    state.preventVerticalScroll = false;
     
-    // NEW: Re-enable text selection on touch end
+    // Re-enable text selection on touch end
     enableTextSelection();
     state.isScrolling = false;
   }, [onNext, onPrev, threshold, cooldown, enableTextSelection]);
@@ -495,27 +544,37 @@ const useSideScroll = ({
         clearTimeout(state.scrollTimeout);
       }
       
-      // NEW: Ensure text selection is re-enabled on unmount
+      // Ensure text selection is re-enabled on unmount
       enableTextSelection();
     };
   }, [enableTextSelection]);
 
-  // Set up event listeners
+  // Set up event listeners with proper handling for page scrolling
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Use passive: false to allow preventDefault
+    // Add data attribute to mark this as a carousel element
+    container.setAttribute('data-carousel', 'true');
+    
+    // Add the hide-scrollbar class to the container
+    container.classList.add('hide-scrollbar');
+
+    // IMPORTANT: Use separate wheel handler that can decide when to prevent default
+    // This lets vertical scroll events pass through completely
     container.addEventListener('wheel', handleWheel, { passive: false });
+    
+    // Set up touch handlers with appropriate passive settings
     container.addEventListener('touchstart', handleTouchStart, { passive: true });
     container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('touchend', handleTouchEnd, { passive: true });
     
     return () => {
       container.removeEventListener('wheel', handleWheel);
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchmove', handleTouchMove);
       container.removeEventListener('touchend', handleTouchEnd);
+      container.classList.remove('hide-scrollbar');
     };
   }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
