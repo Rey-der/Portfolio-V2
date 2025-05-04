@@ -9,50 +9,55 @@
 
 @layer base {
   :root {
-    /* Light theme variables */
-    --background: #ffffff;
-    --text: #000000;
-    --primary: #1a73e8;
-    --primary-rgb: 26, 115, 232;
-    --secondary: #333333;
-    --accent: #ff4081;
-    --cardBackground: #f9f9f9;
-    --border: #e0e0e0;
-    --surfaceBackground: #f9f9f9;
-    --glassBackground: rgba(255, 255, 255, 0.8);
-    
-    /* Invisibility Cloak variables */
-    --color-bg: #f8fafc;
-    --color-bg-rgb: 248, 250, 252;
-    --cloak-color: #f8fafc;
-    --cloak-shadow: 0 -15px 30px #f8fafc, 0 -5px 10px #f8fafc;
+    /* Light theme variables - Derived from Daytime Image */
+    --background: #F8F9FA;
+    --text: #343A40;
+    --primary: #58A4B0;
+    --primary-rgb: 88, 164, 176;
+    --secondary: #6C757D;
+    --accent: #80BBA6;
+    --cardBackground: #E9ECEF;
+    --border: #DEE2E6;
+    --surfaceBackground: #E9ECEF;
+    --glassBackground: rgba(248, 249, 250, 0.8);
+
+    /* Invisibility Cloak variables - Light */
+    --color-bg: #F8F9FA;
+    --color-bg-rgb: 248, 249, 250;
+    --cloak-color: var(--background); /* Match background */
+    --cloak-shadow: 0 -15px 30px var(--background), 0 -5px 10px var(--background);
     --cloak-z-index: 1;
 
     /* Typography */
     --fontFamily: 'Roboto', system-ui, sans-serif;
+
+    /* Project section background - Light */
+    --project-section-bg: var(--surfaceBackground); /* Use surface color */
   }
 
-  /* Dark theme overrides using class */
+  /* Dark theme overrides using class - Derived from Nighttime Image */
   .dark {
-    --background: #121212;
-    --text: #f8f9fa;
-    --primary: #4da3ff;
-    --primary-rgb: 77, 163, 255;
-    --secondary: #a0a0a0;
-    --accent: #ff80ab;
-    --cardBackground: #1e1e1e;
-    --border: #333333;
-    --surfaceBackground: #1e1e1e;
-    --glassBackground: rgba(30, 30, 30, 0.8);
-    
+    --background: #0B132B;
+    --text: #E0E0E0;
+    --primary: #FFD700;
+    --primary-rgb: 255, 215, 0;
+    --secondary: #ADB5BD;
+    --accent: #3A506B;
+    --cardBackground: #1C2541;
+    --border: #3A506B;
+    --surfaceBackground: #1C2541;
+    --glassBackground: rgba(11, 19, 43, 0.85);
+
     /* Dark mode cloak variables */
-    --color-bg: #0f172a;
-    --color-bg-rgb: 15, 23, 42;
-    --cloak-color: #0f172a;
-    --cloak-shadow: 0 -15px 30px #0f172a, 0 -5px 10px #0f172a;
+    --color-bg: #0B132B;
+    --color-bg-rgb: 11, 19, 43;
+    --cloak-color: var(--background); /* Match background */
+    --cloak-shadow: 0 -15px 30px var(--background), 0 -5px 10px var(--background);
+
+    /* Project section background - Dark */
+    --project-section-bg: var(--background); /* Use main background */
   }
 
-  /* Fix html element styles */
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 120px;
@@ -125,7 +130,7 @@
     height: auto;
     display: block;
   }
-  
+
   /* Make sure all scrollable elements don't show scrollbars */
   * {
     scrollbar-color: transparent transparent;
@@ -137,11 +142,22 @@
   .btn-primary {
     @apply px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90 transition;
     background-color: var(--primary);
+    /* Adjust text color for light primary if needed */
+    /* color: #FFFFFF; */ /* Ensure contrast */
   }
+  .dark .btn-primary {
+     color: #0B132B; /* Dark text on gold button */
+  }
+
 
   .btn-secondary {
     @apply px-4 py-2 bg-secondary text-white rounded hover:bg-opacity-90 transition dark:bg-white dark:text-secondary;
     background-color: var(--secondary);
+    /* Adjust text color for dark secondary if needed */
+    /* color: #FFFFFF; */ /* Ensure contrast */
+  }
+  .dark .btn-secondary {
+     color: #0B132B; /* Dark text on light gray button */
   }
 
   .card {
@@ -153,6 +169,9 @@
   .card:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+  .dark .card:hover {
+    box-shadow: 0 4px 20px rgba(var(--primary-rgb), 0.1); /* Use primary color glow */
   }
 
   .container-narrow {
@@ -179,6 +198,11 @@
 
   .form-input {
     @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-dark-surface dark:border-gray-700;
+    border-color: var(--border); /* Use theme border */
+  }
+  .dark .form-input {
+    border-color: var(--border); /* Use theme border */
+    background-color: var(--cardBackground); /* Match card background */
   }
 
   .project-card {
@@ -188,6 +212,15 @@
   .project-card:hover {
     transform: scale(1.02);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+  .dark .project-card:hover {
+     box-shadow: 0 4px 20px rgba(var(--primary-rgb), 0.2); /* Use primary color glow */
+  }
+
+  /* Projects section background - Use CSS variable for easy theme management */
+  .projects-section {
+    background-color: var(--project-section-bg);
+    transition: background-color 0.3s ease; /* Add transition */
   }
 
   /* Icon styles for visibility control */
@@ -203,7 +236,7 @@
   .page-ready .icon-svg {
     opacity: 1;
   }
-  
+
   /* Hide scrollbars for all scrollable elements */
   .hide-scrollbar::-webkit-scrollbar,
   [data-carousel]::-webkit-scrollbar,
@@ -215,7 +248,7 @@
     display: none !important;
     background: transparent !important;
   }
-  
+
   .hide-scrollbar,
   [data-carousel],
   .overflow-auto,
@@ -224,17 +257,54 @@
     -ms-overflow-style: none !important;  /* IE and Edge */
     scrollbar-width: none !important;     /* Firefox */
   }
-  
+
   /* Invisibility Cloak Component - Fixed version */
   .invisibility-cloak {
     @apply fixed left-0 right-0 w-full pointer-events-none;
-    background-color: var(--background); /* Use exact page background */
-    z-index: 0; /* Between skyline (-1) and content (2+) */
-    box-shadow: 0 -25px 40px var(--background), 0 -10px 15px var(--background); /* Enhanced multi-layered shadow */
-    transition: top 0.05s linear; /* More precise movement */
+    background-color: var(--cloak-color); /* Use cloak variable */
+    z-index: var(--cloak-z-index); /* Use cloak variable */
+    box-shadow: var(--cloak-shadow); /* Use cloak variable */
+    transition: top 0.05s linear, background-color 0.3s ease, box-shadow 0.3s ease; /* Add transitions */
     backdrop-filter: none; /* Ensure no visual effects are applied */
     -webkit-backdrop-filter: none;
     will-change: top; /* Optimize for position changes */
+  }
+
+  /* Header navigation active link styles */
+  .nav-link {
+    position: relative;
+    transition: all 0.2s ease;
+    color: var(--secondary); /* Use secondary text color for non-active */
+  }
+
+  .nav-link.active {
+    color: var(--primary); /* Use primary color for active */
+    font-weight: 500;
+  }
+
+  /* Active indicator line */
+  .nav-link.active:after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: var(--primary);
+    border-radius: 1px;
+    transition: background-color 0.3s ease; /* Add transition */
+  }
+
+  /* Dark mode specific adjustments */
+  .dark .nav-link.active {
+    /* Optional: Add subtle glow for dark mode primary */
+    text-shadow: 0 0 8px rgba(var(--primary-rgb), 0.3);
+  }
+
+  /* Hover effect for non-active links */
+  .nav-link:not(.active):hover {
+    color: var(--text); /* Use main text color on hover */
+    opacity: 1; /* Remove opacity change, rely on color */
   }
 }
 
@@ -249,15 +319,20 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600;
+    /* Adjust gradient to fit new themes if needed, or remove if not used */
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
 
   .dark-glass {
-    @apply bg-dark-surface bg-opacity-80 backdrop-blur-md;
+    /* Uses CSS variable directly */
+    background-color: var(--glassBackground);
+    @apply backdrop-blur-md;
   }
 
   .light-glass {
-    @apply bg-white bg-opacity-80 backdrop-blur-md;
+    /* Uses CSS variable directly */
+    background-color: var(--glassBackground);
+     @apply backdrop-blur-md;
   }
 
   .animated-section {
@@ -271,8 +346,12 @@
 
   .btn-secondary:hover svg,
   .btn-secondary:hover span {
-    color: #1f2937;
-    /* dark gray for contrast on white background */
+    /* Adjust hover text color based on theme */
+    color: var(--background); /* Text color becomes background color */
+  }
+  .dark .btn-secondary:hover svg,
+  .dark .btn-secondary:hover span {
+     color: #0B132B; /* Dark text on light gray button hover */
   }
 
   .animated-section.hidden {
@@ -291,7 +370,9 @@
 
 /* Global styles outside of Tailwind layers */
 ::selection {
-  @apply bg-primary bg-opacity-30;
+  background-color: var(--primary);
+  color: var(--background); /* Ensure contrast */
+  @apply bg-opacity-30;
 }
 
 /* Keyframes for animations */
@@ -393,6 +474,7 @@
   background-size: cover;
   background-position: center bottom;
   background-repeat: no-repeat;
+  transition: background-image 0.5s ease-in-out; /* Smooth transition for image change */
 }
 
 /* Additional cloak support styles */
@@ -410,4 +492,5 @@
   right: 0;
   background: var(--background);
   box-shadow: 0 -20px 30px var(--background), 0 -5px 10px var(--background); /* Multi-layered shadow */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Add transitions */
 }

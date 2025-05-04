@@ -14,7 +14,8 @@ const footerTextMultiLang = {
     github: "GitHub",
     linkedin: "LinkedIn",
     contactMe: "Contact Me",
-    getInTouch: "Get in touch with me",
+    getInTouch: "Get in touch", // Shortened for space
+    legal: "Legal & Privacy", // New key
     allRightsReserved: "All rights reserved."
   },
   de: {
@@ -24,7 +25,8 @@ const footerTextMultiLang = {
     github: "GitHub",
     linkedin: "LinkedIn",
     contactMe: "Kontaktiere mich",
-    getInTouch: "Nehmen Sie Kontakt mit mir auf",
+    getInTouch: "Kontakt", // Shortened for space
+    legal: "Impressum & Datenschutz", // New key
     allRightsReserved: "Alle Rechte vorbehalten."
   },
   // Add more languages as needed

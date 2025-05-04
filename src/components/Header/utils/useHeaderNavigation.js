@@ -42,6 +42,12 @@ const useHeaderNavigation = () => {
       navigate('/contact');
       return;
     }
+
+    // Special case for legal page
+    if (sectionId === 'legal') {
+      navigate('/legal');
+      return;
+    }
     
     // Case 1: Navigating to a different page route
     if (path && path !== '/' && path !== location.pathname) {
@@ -58,8 +64,8 @@ const useHeaderNavigation = () => {
       return;
     }
     
-    // Case 2: Coming from contact page
-    if (location.pathname === '/contact') {
+    // Case 2: Coming from contact or legal page
+    if (location.pathname === '/contact' || location.pathname === '/legal') {
       navigate('/');
       
       // Use requestAnimationFrame for smoother performance
@@ -84,13 +90,18 @@ const useHeaderNavigation = () => {
       return 'text-primary font-medium';
     }
     
+    // Special case for legal page
+    if (sectionId === 'legal' && location.pathname === '/legal') {
+      return 'text-primary font-medium';
+    }
+    
     // For dedicated section pages
     if (location.pathname.includes(sectionId) && sectionId !== 'home') {
       return 'text-primary font-medium';
     }
     
     // For sections on the home page
-    if (location.pathname === '/' && sectionId !== 'contact') {
+    if (location.pathname === '/' && sectionId !== 'contact' && sectionId !== 'legal') {
       if (activeSection === sectionId) {
         return 'text-primary font-medium';
       }

@@ -91,114 +91,127 @@ const Projects = ({ registerWithURL }) => {
   };
 
   return (
+    // Section now handles overflow and relative positioning for the wide background effect
     <section 
       id="projects" 
       ref={sectionRef} 
       data-section="projects"
-      className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900 relative"
+      className="relative overflow-x-hidden bg-slate-50 dark:bg-slate-900" // Added overflow-x-hidden
       style={{
-        minHeight: 'calc(100vh - 80px)',
         scrollMarginTop: '120px',
-        paddingBottom: '100px',
-        position: 'relative' // Ensure relative positioning
       }}
     >
-      {/* Add invisible triggers at start and end */}
-      <SectionTriggers sectionId="projects" />
-      
-      {/* Single section marker for visibility */}
-      <div id="projects-visibility-center" 
+      {/* Inner container for the wide background effect */}
+      <div 
+        className="py-20 px-4 sm:px-6 lg:px-8 relative" // Keep padding for content alignment
         style={{
-          position: 'absolute', 
-          top: '50%', 
-          left: 0,
-          width: '100%',
-          height: '100px',
-          pointerEvents: 'none',
-          zIndex: -1
+          minHeight: 'calc(100vh - 80px)',
+          paddingBottom: '100px',
+          // Make the background wider using negative margins and padding
+          marginLeft: '-5vw', // Pull background left
+          marginRight: '-5vw', // Pull background right
+          paddingLeft: '5vw', // Push content back in
+          paddingRight: '5vw', // Push content back in
         }}
-      />
-      
-      <div className="max-w-7xl mx-auto relative">
-        <motion.div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            {currentUIText.sectionTitle}
-          </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
-            {currentUIText.sectionSubtitle}
-          </p>
-        </motion.div>
+      >
+        {/* Add invisible triggers at start and end */}
+        <SectionTriggers sectionId="projects" />
+        
+        {/* Single section marker for visibility */}
+        <div id="projects-visibility-center" 
+          style={{
+            position: 'absolute', 
+            top: '50%', 
+            left: 0,
+            width: '100%',
+            height: '100px',
+            pointerEvents: 'none',
+            zIndex: -1
+          }}
+        />
+        
+        {/* Max-width container for the actual content */}
+        <div className="max-w-7xl mx-auto relative"> 
+          <motion.div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
+              {currentUIText.sectionTitle}
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-300 max-w-3xl mx-auto">
+              {currentUIText.sectionSubtitle}
+            </p>
+          </motion.div>
 
-        {/* Category Filter with View Toggle */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          {/* Filter buttons */}
-          <div className="flex flex-wrap gap-2 justify-center mx-auto md:mx-0">
-            {currentCategories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => handleFilterClick(category.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  activeFilter === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
-                }`}
+          {/* Category Filter with View Toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+            {/* Filter buttons */}
+            <div className="flex flex-wrap gap-2 justify-center mx-auto md:mx-0">
+              {currentCategories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => handleFilterClick(category.id)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    activeFilter === category.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600'
+                  }`}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+            
+            {/* View mode toggle button - only shown on larger screens */}
+            {!isMobileView && (
+              <motion.button
+                onClick={toggleViewMode}
+                className="md:flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 rounded-full shadow-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label={viewMode === 'carousel' ? "Switch to grid view" : "Switch to carousel view"}
+                title={viewMode === 'carousel' ? "Switch to grid view" : "Switch to carousel view"}
               >
-                {category.label}
-              </button>
-            ))}
+                {viewMode === 'carousel' ? (
+                  <>
+                    <FaThLarge className="text-slate-800 dark:text-white" />
+                    <span className="text-sm font-medium text-slate-800 dark:text-white">Grid View</span>
+                  </>
+                ) : (
+                  <>
+                    <FaStream className="text-slate-800 dark:text-white" />
+                    <span className="text-sm font-medium text-slate-800 dark:text-white">Carousel View</span>
+                  </>
+                )}
+              </motion.button>
+            )}
           </div>
-          
-          {/* View mode toggle button - only shown on larger screens */}
-          {!isMobileView && (
-            <motion.button
-              onClick={toggleViewMode}
-              className="md:flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 rounded-full shadow-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label={viewMode === 'carousel' ? "Switch to grid view" : "Switch to carousel view"}
-              title={viewMode === 'carousel' ? "Switch to grid view" : "Switch to carousel view"}
-            >
-              {viewMode === 'carousel' ? (
-                <>
-                  <FaThLarge className="text-slate-800 dark:text-white" />
-                  <span className="text-sm font-medium text-slate-800 dark:text-white">Grid View</span>
-                </>
-              ) : (
-                <>
-                  <FaStream className="text-slate-800 dark:text-white" />
-                  <span className="text-sm font-medium text-slate-800 dark:text-white">Carousel View</span>
-                </>
-              )}
-            </motion.button>
+
+          {/* Projects View - Always grid on mobile, conditional on larger screens */}
+          {!isMobileView && viewMode === 'carousel' ? (
+            <div className="w-full">
+              <ProjectCarousel projects={filteredProjects} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map(project => (
+                <div key={project.id} className="h-full">
+                  <ProjectCard 
+                    {...project} 
+                    isActive={true} 
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty state when no projects match filter */}
+          {filteredProjects.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-slate-600 dark:text-slate-400">
+                {currentUIText.emptyState}
+              </p>
+            </div>
           )}
         </div>
-
-        {/* Projects View - Always grid on mobile, conditional on larger screens */}
-        {!isMobileView && viewMode === 'carousel' ? (
-          <div className="w-full">
-            <ProjectCarousel projects={filteredProjects} />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map(project => (
-              <div key={project.id} className="h-full">
-                <ProjectCard 
-                  {...project} 
-                  isActive={true} 
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Empty state when no projects match filter */}
-        {filteredProjects.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-slate-600 dark:text-slate-400">
-              {currentUIText.emptyState}
-            </p>
-          </div>
-        )}
       </div>
     </section>
   );

@@ -13,12 +13,21 @@ const MobileNavigation = ({
   headerText, 
   isActive, 
   handleNavigation,
-  isDarkMode 
+  isDarkMode,
+  toggleTheme // Add this prop to receive the theme toggle function
 }) => {
   const menuRef = useRef(null);
   const { currentLanguage, toggleLanguage } = useLanguage();
   const linkClasses = getGlassTextClasses(isDarkMode);
   const navigationLinks = getNavigationLinks(headerText);
+  
+  // Add debugging logs for theme toggle
+  useEffect(() => {
+    console.log('MobileNavigation received props:', { 
+      toggleTheme: !!toggleTheme,
+      isDarkMode 
+    });
+  }, [toggleTheme, isDarkMode]);
   
   // Menu trap focus and escape key handling
   useEffect(() => {
@@ -55,6 +64,12 @@ const MobileNavigation = ({
     }
   });
   
+  // Helper function to close menu when clicking navigation links
+  const handleNavClick = (path) => {
+    handleNavigation(path);
+    setIsMenuOpen(false);
+  };
+  
   if (!isMenuOpen) return null;
   
   return (
@@ -71,12 +86,16 @@ const MobileNavigation = ({
             link={link} 
             linkClasses={linkClasses} 
             isActive={isActive}
-            handleNavigation={handleNavigation}
+            handleNavigation={handleNavClick}
             isMobile={true}
           />
         ))}
         <div className="mt-4 mb-2 flex items-center gap-4">
-          <ThemeToggle />
+          {/* Pass the required props to ThemeToggle */}
+          <ThemeToggle 
+            toggleTheme={toggleTheme}
+            isDarkMode={isDarkMode}
+          />
           <LanguageToggle 
             currentLanguage={currentLanguage} 
             toggleLanguage={toggleLanguage}
