@@ -329,7 +329,8 @@ const Home = ({ registerWithURL }) => {
         overflow: 'hidden' // Keep overflow hidden
       }}
     >
-      <style jsx>{`
+      {/* Fix: Changed jsx attribute from boolean to string */}
+      <style jsx="true">{`
         .skyline-layer-light, .skyline-layer-dark {
           transition: opacity 0.8s ease-in-out, transform 0.05s ease-out, background-size 0.3s ease-out, background-position 0.3s ease-out;
         }

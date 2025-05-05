@@ -83,27 +83,28 @@ const useHeaderNavigation = () => {
 
   /**
    * Determines if a navigation link should be shown as active
+   * FIXED: Using !text-primary to ensure it overrides any other text color classes 
    */
   const isActive = (sectionId) => {
     // Special case for contact page
     if (sectionId === 'contact' && location.pathname === '/contact') {
-      return 'text-primary font-medium';
+      return '!text-primary font-medium'; // Added ! to ensure priority
     }
     
     // Special case for legal page
     if (sectionId === 'legal' && location.pathname === '/legal') {
-      return 'text-primary font-medium';
+      return '!text-primary font-medium'; // Added ! to ensure priority
     }
     
     // For dedicated section pages
     if (location.pathname.includes(sectionId) && sectionId !== 'home') {
-      return 'text-primary font-medium';
+      return '!text-primary font-medium'; // Added ! to ensure priority
     }
     
     // For sections on the home page
     if (location.pathname === '/' && sectionId !== 'contact' && sectionId !== 'legal') {
       if (activeSection === sectionId) {
-        return 'text-primary font-medium';
+        return '!text-primary font-medium'; // Added ! to ensure priority
       }
     }
     

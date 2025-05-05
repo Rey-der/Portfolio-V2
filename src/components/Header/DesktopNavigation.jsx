@@ -17,13 +17,7 @@ const DesktopNavigation = ({
   const { currentLanguage, toggleLanguage } = useLanguage();
   const linkClasses = getGlassTextClasses(isDarkMode);
   
-  // Add console log to verify props are passed correctly
-  React.useEffect(() => {
-    console.log('DesktopNavigation received props:', { 
-      toggleTheme: !!toggleTheme,
-      isDarkMode 
-    });
-  }, [toggleTheme, isDarkMode]);
+  // Removed debug logging useEffect
   
   const navigationLinks = getNavigationLinks(headerText);
   

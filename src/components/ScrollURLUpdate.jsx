@@ -35,7 +35,7 @@ const ScrollURLUpdate = () => {
     const newPath = sectionId === 'home' ? '/' : `/${sectionId}`;
     
     if (currentPath !== newPath && !urlCooldownRef.current) {
-      console.log(`ScrollURLUpdate - URL UPDATE: ${sectionId} (${triggerType}) → ${newPath} (visibility: ${visibility.toFixed(2)})`);
+      // Removed console.log
       
       // Update state and URL
       setCurrentPath(newPath);
@@ -113,7 +113,7 @@ const ScrollURLUpdate = () => {
         urlTriggerObserverRef.current.observe(trigger);
       });
       
-      console.log(`ScrollURLUpdate - Observing ${urlTriggers.length} URL triggers`);
+      // Removed console.log
     }, 500);
     
     // Cleanup

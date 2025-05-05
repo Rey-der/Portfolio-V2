@@ -187,13 +187,15 @@ export function createDirectParallaxEffect({
  */
 export function createSkylineParallaxEffect({
   count = 15,
-  darkColors = ['#1a365d', '#1e3a8a', '#312e81', '#4c1d95', '#581c87'],
+  // UPDATED: Changed from blue/purple colors to dark gray shades that match index.css
+  darkColors = ['#1A1A1A', '#252525', '#333333', '#404040', '#505050'], 
   lightColors = ['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#2563eb'],
   theme = 'light',
   mouseFactor = 0.02
 }) {
   const colors = theme === 'dark' ? darkColors : lightColors;
-  const windowLightColor = theme === 'dark' ? '#facc15' : '#fef3c7';
+  // Updated: Use gold from CSS variables for window lights in dark mode
+  const windowLightColor = theme === 'dark' ? '#FFD700' : '#fef3c7'; 
   
   return createDirectParallaxEffect({
     count,

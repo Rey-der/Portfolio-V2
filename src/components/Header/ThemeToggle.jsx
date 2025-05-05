@@ -1,30 +1,22 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
-const ThemeToggle = ({ toggleTheme, isDarkMode }) => {
-  // Add debug logging to see if props are received correctly
-  useEffect(() => {
-    console.log('ThemeToggle component received props:', {
-      hasToggleFunction: !!toggleTheme,
-      isDarkMode
-    });
-  }, [toggleTheme, isDarkMode]);
-
-  // Create safe handler with additional debugging
+const ThemeToggle = ({ 
+  toggleTheme = () => {
+    // As a fallback, try to toggle the class directly
+    if (document.documentElement.classList.contains('dark')) {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+    }
+  }, 
+  isDarkMode = false 
+}) => {
+  // Create handler without debugging logs
   const handleToggle = (e) => {
     e.preventDefault();
-    console.log('ThemeToggle: Toggle button clicked');
     
     if (typeof toggleTheme === 'function') {
-      console.log('ThemeToggle: Calling toggleTheme function');
       toggleTheme();
-      
-      // Verify the change after a short delay
-      setTimeout(() => {
-        const hasClassNow = document.documentElement.classList.contains('dark');
-        console.log('ThemeToggle: After toggle, dark mode class is present:', hasClassNow);
-      }, 100);
-    } else {
-      console.error('ThemeToggle: toggleTheme is not a function!', toggleTheme);
     }
   };
   
@@ -49,21 +41,6 @@ const ThemeToggle = ({ toggleTheme, isDarkMode }) => {
       )}
     </button>
   );
-};
-
-// Add prop types fallback for safety
-ThemeToggle.defaultProps = {
-  toggleTheme: () => {
-    console.error('ThemeToggle: No toggleTheme function was provided as a prop');
-    
-    // As a fallback, try to toggle the class directly
-    if (document.documentElement.classList.contains('dark')) {
-      document.documentElement.classList.remove('dark');
-    } else {
-      document.documentElement.classList.add('dark');
-    }
-  },
-  isDarkMode: false
 };
 
 export default ThemeToggle;

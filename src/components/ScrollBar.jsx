@@ -10,7 +10,7 @@ const animations = {
 // Define the correct section order
 const SECTION_ORDER = ['home', 'projects', 'about', 'guestbook'];
 
-// DEBUG: Store the last broadcast timestamp and sequence
+// Removed debug variables
 let lastBroadcastTime = 0;
 let broadcastCounter = 0;
 
@@ -73,7 +73,7 @@ const ScrollBar = () => {
     return bestSection;
   };
   
-  // Enhanced scroll position broadcasting system with debugging
+  // Enhanced scroll position broadcasting system with debugging removed
   const broadcastScrollPosition = (data) => {
     // Get timestamp for this broadcast
     const now = Date.now();
@@ -91,14 +91,7 @@ const ScrollBar = () => {
       // Only update on section change to reduce noise
       if (detectedSection && detectedSection !== lastDetectedSectionRef.current) {
         lastDetectedSectionRef.current = detectedSection;
-        
-        console.log(`%c🧭 DETECTED SECTION CHANGE: ${detectedSection}`, 
-          'background: #ff4081; color: white; padding: 2px 5px; border-radius: 3px;',
-          {
-            scrollY: nativeScrollY,
-            previousSection: lastDetectedSectionRef.current
-          }
-        );
+        // Removed console.log for detected section change
       }
     }
     
@@ -117,14 +110,7 @@ const ScrollBar = () => {
           // Only set a target position if we're within 200px of the section
           // This allows natural scrolling but helps with transitions near sections
           if (distanceToSection < 200) {
-            console.log(`%c🎯 TARGET SET DURING NATIVE SCROLL: ${detectedSection}`, 
-              'background: #8bc34a; color: white; padding: 2px 5px; border-radius: 3px;',
-              {
-                nativeY: Math.round(nativeScrollY),
-                targetY: Math.round(targetPosition),
-                diff: Math.round(distanceToSection)
-              }
-            );
+            // Removed console.log for target set during native scroll
           } else {
             // If we're far from section boundary, don't target to allow natural scrolling
             targetPosition = null;
@@ -169,19 +155,7 @@ const ScrollBar = () => {
     // Store timestamp for next comparison
     lastBroadcastTime = now;
     
-    // Enhanced debug logging with color coding
-    console.log(
-      `%c📢 SCROLL BROADCAST #${broadcastCounter}:`, 
-      'background: #0084ff; color: white; padding: 2px 5px; border-radius: 3px;',
-      {
-        native: Math.round(nativeScrollY),
-        target: targetPosition ? Math.round(targetPosition) : 'none',
-        section: detectedSection || activeSection || 'none',
-        source: data?.source || 'scrollbar',
-        diff: targetPosition ? `${Math.round(Math.abs(nativeScrollY - targetPosition))}px` : 'n/a',
-        time: new Date(now).toLocaleTimeString() + '.' + String(now % 1000).padStart(3, '0')
-      }
-    );
+    // Removed enhanced debug logging
   };
   
   // Handler that broadcasts before scrolling
@@ -198,14 +172,7 @@ const ScrollBar = () => {
       scrollY: getScrollY() // Send current scroll position
     });
     
-    console.log(`%c🔍 SCROLLING TO SECTION: ${sectionId}`, 
-      'background: #ff9800; color: black; padding: 2px 5px; border-radius: 3px;',
-      {
-        target: targetPosition,
-        current: getScrollY(),
-        diff: Math.abs(getScrollY() - targetPosition)
-      }
-    );
+    // Removed console.log for scrolling to section
     
     // Then perform the actual scroll
     scrollToSection(sectionId);
@@ -218,20 +185,13 @@ const ScrollBar = () => {
     // Find section element to get position
     const sectionElement = document.getElementById(activeSection);
     if (!sectionElement) {
-      console.warn(`Section element not found: #${activeSection}`);
+      // Removed console.warn
       return;
     }
     
     const targetPosition = sectionElement.offsetTop;
     
-    console.log(`%c🔁 ACTIVE SECTION CHANGED TO ${activeSection}`, 
-      'background: #e91e63; color: white; padding: 2px 5px; border-radius: 3px;', 
-      {
-        targetY: targetPosition,
-        currentY: getScrollY(),
-        diff: Math.abs(getScrollY() - targetPosition)
-      }
-    );
+    // Removed console.log for active section changed
     
     // Broadcast this section change
     broadcastScrollPosition({
@@ -255,14 +215,7 @@ const ScrollBar = () => {
       
       const targetPosition = sectionElement.offsetTop;
       
-      // Log this event
-      console.log(`%c🔄 SECTION CHANGE DETECTED: ${section}`, 
-        'background: #4caf50; color: white; padding: 2px 5px; border-radius: 3px;',
-        {
-          targetY: targetPosition,
-          currentY: getScrollY()
-        }
-      );
+      // Removed console.log for section change detected
       
       // Broadcast the target position
       broadcastScrollPosition({
@@ -357,14 +310,7 @@ const ScrollBar = () => {
       const currentSection = detectCurrentSection(currentScrollY);
       
       if (currentSection && currentSection !== lastDetectedSectionRef.current) {
-        console.log(`%c⚠️ SECTION SYNC CORRECTION`, 
-          'background: #f44336; color: white; padding: 2px 5px; border-radius: 3px;',
-          {
-            oldSection: lastDetectedSectionRef.current,
-            newSection: currentSection,
-            scrollY: currentScrollY
-          }
-        );
+        // Removed console.log for section sync correction
         
         lastDetectedSectionRef.current = currentSection;
         

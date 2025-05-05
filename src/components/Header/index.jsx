@@ -46,12 +46,8 @@ const Header = () => {
   const { currentLanguage } = useLanguage();
   const [iconsVisible, setIconsVisible] = useState(true);
 
-  // Add console logging for debugging
-  useEffect(() => {
-    console.log('Header component - Current theme:', theme);
-    console.log('Header component - toggleTheme function exists:', !!toggleTheme);
-  }, [theme, toggleTheme]);
-
+  // Removed console logging for debugging
+  
   const headerText = getHeaderText(currentLanguage);
   const headerVisibleRoutes = ['/', '/home', '/projects', '/about', '/guestbook', '/contact', '/legal'];
   const shouldShowHeader = headerVisibleRoutes.includes(location.pathname);
@@ -134,14 +130,10 @@ const Header = () => {
     document.body.style.paddingTop = '0';
   }
 
-  // Function to handle theme toggle click with debug logging
+  // Function to handle theme toggle click without debug logging
   const handleThemeToggle = () => {
-    console.log('Theme toggle clicked in header');
     if (toggleTheme) {
       toggleTheme();
-      console.log('Theme toggled to:', theme === 'dark' ? 'light' : 'dark');
-    } else {
-      console.error('toggleTheme function is not available in the Header component');
     }
   };
 

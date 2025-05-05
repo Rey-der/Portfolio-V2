@@ -12,6 +12,7 @@
     /* Light theme variables - Derived from Daytime Image */
     --background: #F8F9FA;
     --text: #343A40;
+    --text-rgb: 52, 58, 64; /* Add RGB for --text color */
     --primary: #58A4B0;
     --primary-rgb: 88, 164, 176;
     --secondary: #6C757D;
@@ -20,6 +21,9 @@
     --border: #DEE2E6;
     --surfaceBackground: #E9ECEF;
     --glassBackground: rgba(248, 249, 250, 0.8);
+
+    /* UPDATED: Responsive horizontal padding for section content */
+    --section-padding-x: max(1rem, min(10vw, 10rem));
 
     /* Invisibility Cloak variables - Light */
     --color-bg: #F8F9FA;
@@ -33,24 +37,57 @@
 
     /* Project section background - Light */
     --project-section-bg: var(--surfaceBackground); /* Use surface color */
+    
+    /* Z-index hierarchy */
+    --z-background: 1;
+    --z-lines: 2;      /* Adjusted for better visibility */
+    --z-content: 10;
+    --z-header: 50;
+    --z-modal: 100;
   }
 
-  /* Dark theme overrides using class - Derived from Nighttime Image */
-  .dark {
-    --background: #0B132B;
-    --text: #E0E0E0;
-    --primary: #FFD700;
-    --primary-rgb: 255, 215, 0;
-    --secondary: #ADB5BD;
-    --accent: #3A506B;
-    --cardBackground: #1C2541;
-    --border: #3A506B;
-    --surfaceBackground: #1C2541;
-    --glassBackground: rgba(11, 19, 43, 0.85);
+  /* ADDED: Media queries for responsive padding adjustments */
+  @media (max-width: 640px) {
+    :root {
+      --section-padding-x: 1rem; /* 16px on small mobile screens */
+    }
+  }
 
-    /* Dark mode cloak variables */
-    --color-bg: #0B132B;
-    --color-bg-rgb: 11, 19, 43;
+  @media (min-width: 641px) and (max-width: 1024px) {
+    :root {
+      --section-padding-x: max(2rem, 5vw); /* Balanced padding for tablets */
+    }
+  }
+
+  @media (min-width: 1025px) and (max-width: 1440px) {
+    :root {
+      --section-padding-x: max(3rem, 8vw); /* Comfortable padding for laptops */
+    }
+  }
+
+  @media (min-width: 1441px) {
+    :root {
+      --section-padding-x: max(5rem, 10vw); /* Larger padding for wide screens */
+    }
+  }
+
+  /* Dark theme overrides using class - Now with darker gray tones */
+  .dark {
+    --background: #1A1A1A; /* Changed from #0B132B to darker gray */
+    --text: #E0E0E0; /* Kept light text color for contrast */
+    --text-rgb: 224, 224, 224; /* Add RGB for dark --text color */
+    --primary: #FFD700; /* Kept gold accent for contrast */
+    --primary-rgb: 255, 215, 0; /* Kept gold RGB */
+    --secondary: #ADB5BD; /* Kept light gray */
+    --accent: #404040; /* Changed from #3A506B to medium-dark gray */
+    --cardBackground: #252525; /* Changed from #1C2541 to dark gray */
+    --border: #404040; /* Changed from #3A506B to match accent */
+    --surfaceBackground: #252525; /* Changed from #1C2541 to match card */
+    --glassBackground: rgba(26, 26, 26, 0.85); /* Changed to match new background */
+
+    /* Dark mode cloak variables - Updated to match new dark gray */
+    --color-bg: #1A1A1A; /* Match new background */
+    --color-bg-rgb: 26, 26, 26; /* RGB for new background */
     --cloak-color: var(--background); /* Match background */
     --cloak-shadow: 0 -15px 30px var(--background), 0 -5px 10px var(--background);
 
@@ -146,7 +183,7 @@
     /* color: #FFFFFF; */ /* Ensure contrast */
   }
   .dark .btn-primary {
-     color: #0B132B; /* Dark text on gold button */
+     color: #1A1A1A; /* Updated: Dark text on gold button */
   }
 
 
@@ -157,7 +194,7 @@
     /* color: #FFFFFF; */ /* Ensure contrast */
   }
   .dark .btn-secondary {
-     color: #0B132B; /* Dark text on light gray button */
+     color: #1A1A1A; /* Updated: Dark text on light gray button */
   }
 
   .card {
@@ -205,16 +242,23 @@
     background-color: var(--cardBackground); /* Match card background */
   }
 
+  /* UPDATED: Apply theme variables to project-card */
   .project-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    @apply rounded-lg shadow-md p-6 h-full flex flex-col; /* Added base structure */
+    background-color: var(--cardBackground);
+    border: 1px solid var(--border);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   }
 
   .project-card:hover {
     transform: scale(1.02);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    /* Use a subtle shadow based on text color variable for light mode */
+    box-shadow: 0 4px 20px rgba(var(--text-rgb, 52, 58, 64), 0.1);
   }
   .dark .project-card:hover {
-     box-shadow: 0 4px 20px rgba(var(--primary-rgb), 0.2); /* Use primary color glow */
+     /* Use primary color glow for dark mode */
+     box-shadow: 0 4px 20px rgba(var(--primary-rgb), 0.2);
+     border-color: rgba(var(--primary-rgb), 0.5); /* Add subtle border highlight */
   }
 
   /* Projects section background - Use CSS variable for easy theme management */
@@ -351,7 +395,7 @@
   }
   .dark .btn-secondary:hover svg,
   .dark .btn-secondary:hover span {
-     color: #0B132B; /* Dark text on light gray button hover */
+     color: #1A1A1A; /* Updated: Dark text on light gray button hover */
   }
 
   .animated-section.hidden {
@@ -365,6 +409,12 @@
 
   .pulse-animation {
     animation: pulse 2s infinite;
+  }
+
+  /* ADDED: Utility for truly responsive section padding */
+  .responsive-section-padding {
+    padding-left: var(--section-padding-x);
+    padding-right: var(--section-padding-x);
   }
 }
 
@@ -477,6 +527,35 @@
   transition: background-image 0.5s ease-in-out; /* Smooth transition for image change */
 }
 
+/* Styles for the skyline cloak wrapper */
+.skyline-cloak {
+  position: relative; /* Needed for z-index and positioning context */
+  width: 100vw; /* Full viewport width */
+  /* Center the full-width element relative to its container */
+  margin-left: calc(-50vw + 50%);
+  margin-right: calc(-50vw + 50%);
+  /* Use the background color variable from the theme */
+  background-color: var(--background); /* UPDATED: Use CSS variable */
+  z-index: var(--z-background); /* UPDATED: Use z-index variable */
+  /* Optional: Add a subtle shadow at the top edge for visual separation */
+  box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.1); /* Light mode shadow */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Add transitions */
+}
+
+/* Ensure the inner section doesn't inherit unwanted width styles */
+.skyline-cloak > section {
+  width: 100%;
+  max-width: 100%; /* Prevent section from exceeding cloak width */
+  position: relative; /* ADDED: Create stacking context */
+  z-index: var(--z-content); /* ADDED: Ensure content is above lines */
+}
+
+/* Adjust dark mode shadow (background color is now handled by the main rule) */
+.dark .skyline-cloak {
+  /* background-color: #1A1A1A; /* REMOVED: No longer needed */
+  box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.3); /* Dark mode shadow */
+}
+
 /* Additional cloak support styles */
 .skyline-cloak-container {
   position: relative;
@@ -493,4 +572,99 @@
   background: var(--background);
   box-shadow: 0 -20px 30px var(--background), 0 -5px 10px var(--background); /* Multi-layered shadow */
   transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Add transitions */
+}
+
+/* UPDATED: Wrapper for corner lines (now inside skyline-cloak) */
+.corner-lines-wrapper {
+  position: absolute; /* Take out of flow relative to skyline-cloak */
+  top: 0;
+  left: 0; /* Align with the skyline-cloak's top-left */
+  width: 100%; /* Span the full width of the skyline-cloak */
+  height: 100%; /* Span the full height of the skyline-cloak */
+  pointer-events: none; /* Make sure it doesn't interfere with clicks */
+  overflow: hidden; /* Hide any potential overflow from pseudo-elements */
+  z-index: var(--z-lines); /* UPDATED: Use z-index variable */
+}
+
+.corner-lines-wrapper::before,
+.corner-lines-wrapper::after {
+  content: '';
+  position: fixed; /* Position relative to the viewport */
+  top: 0; /* Start from the top of the viewport */
+  bottom: 0; /* Extend to the bottom of the viewport */
+  width: 1px; /* Line thickness */
+  background-color: var(--border); /* Use theme border color */
+  z-index: var(--z-lines); /* UPDATED: Use z-index variable */
+  transition: background-color 0.3s ease; /* Add transition */
+}
+
+.corner-lines-wrapper::before {
+  /* Position 10% from the left edge of the viewport */
+  left: 10vw;
+}
+
+.corner-lines-wrapper::after {
+  /* Position 10% from the right edge of the viewport */
+  right: 10vw;
+}
+
+/* ADDED: Ensure section content stays above the lines */
+section > div {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+/* ADDED: Apply proper z-index to main content wrappers */
+.skyline-cloak > section {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+/* ADDED: Footer needs to be above lines */
+footer {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+/* ADDED: Content elements inside sections need to be above the lines */
+section .max-w-7xl,
+section .container,
+section .container-wide,
+section .container-narrow {
+  position: relative;
+  z-index: var(--z-content);
+}
+
+/* ADDED: Ensure header stays at highest level */
+header {
+  z-index: var(--z-header) !important;
+}
+
+/* NEW: Root level vertical lines - added for global implementation */
+.root-vertical-lines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  pointer-events: none;
+  z-index: var(--z-lines);
+  overflow: hidden;
+}
+
+.vertical-line {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: var(--border);
+  transition: background-color 0.3s ease;
+}
+
+.vertical-line.left {
+  left: 10vw;
+}
+
+.vertical-line.right {
+  right: 10vw;
 }

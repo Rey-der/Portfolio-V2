@@ -21,24 +21,24 @@ const MainLayout = () => {
   const initialPathHandledRef = useRef(false);
   const [showDebug, setShowDebug] = useState(false);
   
-  // DEBUG: Log active section updates
+  // Removed logging for activeSection changes
   useEffect(() => {
-    console.log('MainLayout - activeSection changed:', activeSection);
+    // Effect retained but logs removed
   }, [activeSection]);
   
-  // DEBUG: Log registered sections
+  // Removed logging for registered sections
   useEffect(() => {
-    console.log('MainLayout - registered sections:', registeredSections);
+    // Effect retained but logs removed
   }, [registeredSections]);
   
   // Register sections with URL-aware system
   const registerWithURL = useCallback((sectionId, ref) => {
     if (!sectionId || !ref) {
-      console.warn('Missing sectionId or ref in registerWithURL');
+      // Removed console warning
       return () => {};
     }
     
-    console.log(`MainLayout - registering section: ${sectionId}`);
+    // Removed registration logging
     return registerSection(sectionId, ref);
   }, [registerSection]);
   
@@ -47,12 +47,12 @@ const MainLayout = () => {
     if (initialPathHandledRef.current) return;
     
     const path = location.pathname.substring(1); // Remove leading slash
-    console.log('MainLayout - handling initial path:', path);
+    // Removed path logging
     
     if (path && path !== 'home' && visibleSections.includes(path)) {
       // Wait for sections to render before scrolling
       setTimeout(() => {
-        console.log(`MainLayout - scrolling to initial section: ${path}`);
+        // Removed logging for initial section scrolling
         scrollToSection(path);
         setActiveSection(path);
       }, 500);
@@ -65,35 +65,35 @@ const MainLayout = () => {
   useEffect(() => {
     const handleSectionChange = (e) => {
       if (e.detail && e.detail.sectionId) {
-        console.log('MainLayout - section-change event detected:', e.detail.sectionId);
+        // Removed section-change event logging
         setActiveSection(e.detail.sectionId);
       }
     };
     
     document.addEventListener('section-change', handleSectionChange);
     
-    console.log('MainLayout - section-change event listener added');
+    // Removed listener addition logging
     
     return () => {
       document.removeEventListener('section-change', handleSectionChange);
-      console.log('MainLayout - section-change event listener removed');
+      // Removed listener removal logging
     };
   }, [setActiveSection]);
   
   // Add keyboard shortcut for debug panel (Ctrl+Shift+D) - FIXED for macOS
   useEffect(() => {
     const handleKeyDown = (e) => {
-      console.log('Key pressed:', e.key, 'Ctrl:', e.ctrlKey || e.metaKey, 'Shift:', e.shiftKey);
+      // Removed key press logging
       
       // For macOS, we need to handle both Command+Shift+D and Ctrl+Shift+D
       const modifierKey = e.ctrlKey || e.metaKey; // metaKey is Command on Mac
       
       // Check for both lowercase and uppercase D
       if (modifierKey && e.shiftKey && (e.key === 'd' || e.key === 'D')) {
-        console.log('Debug toggle shortcut detected');
+        // Removed debug shortcut detection logging
         setShowDebug(prev => {
           const newValue = !prev;
-          console.log('Toggling debug panel:', newValue);
+          // Removed debug panel toggle logging
           return newValue;
         });
         // Prevent default behavior
@@ -112,7 +112,7 @@ const MainLayout = () => {
   // Toggle debug function kept for programmatic use if needed
   const toggleDebug = () => {
     setShowDebug(prev => !prev);
-    console.log("Debug toggled programmatically");
+    // Removed programmatic toggle logging
   };
 
   return (

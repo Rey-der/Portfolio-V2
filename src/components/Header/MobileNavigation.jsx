@@ -21,13 +21,7 @@ const MobileNavigation = ({
   const linkClasses = getGlassTextClasses(isDarkMode);
   const navigationLinks = getNavigationLinks(headerText);
   
-  // Add debugging logs for theme toggle
-  useEffect(() => {
-    console.log('MobileNavigation received props:', { 
-      toggleTheme: !!toggleTheme,
-      isDarkMode 
-    });
-  }, [toggleTheme, isDarkMode]);
+  // Removed debugging logs for theme toggle
   
   // Menu trap focus and escape key handling
   useEffect(() => {
