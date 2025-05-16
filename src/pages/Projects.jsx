@@ -103,7 +103,7 @@ const Projects = ({ registerWithURL }) => {
         id="projects"
         ref={sectionRef}
         data-section="projects"
-        className="relative overflow-x-hidden bg-background dark:bg-dark-background"
+        className="relative overflow-x-hidden"
         style={{
           scrollMarginTop: '120px',
           position: 'relative',

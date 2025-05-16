@@ -9,69 +9,50 @@ import GuestbookEntryList from '../components/GuestbookEntryList';
 import { guestbookText } from '../data/guestbookData';
 import { getGuestbookText } from '../data/guestbookData';
 import { useLanguage } from '../context/LanguageContext';
-import useSectionRegistration from '../hooks/useSectionRegistration'; // Import the hook
-import SectionTriggers from '../components/SectionTriggers'; // Import SectionTriggers
+import useSectionRegistration from '../hooks/useSectionRegistration';
+import SectionTriggers from '../components/SectionTriggers';
+import { useTheme } from '../utils/useTheme';
+import VerticalLines from '../components/lines.jsx';
 
 const Guestbook = ({ registerWithURL }) => {
-  // Use the custom registration hook
   const { sectionRef } = useSectionRegistration('guestbook', registerWithURL);
-
-  // ScrollContext integration - we only need scrollToSection now
   const { scrollToSection } = useScroll();
-
-  // Device detection for responsive adjustments
   const isMobile = useDeviceDetection();
-  const isTablet = useDeviceDetection(1024);
-
-  // Use language context
+  const isTablet = useDeviceDetection(1024); // Assuming tablet breakpoint
   const { currentLanguage } = useLanguage();
   const currentGuestbookText = getGuestbookText(currentLanguage) || guestbookText;
+  const { theme } = useTheme();
+  const isDarkMode = theme === 'dark';
 
-  // Preload the Home section for circular navigation
   useProgressiveLoading(['/src/pages/Home.jsx']);
 
-  // Enhanced scroll to top - ensure it doesn't interfere with scroll tracking
   const handleScrollToTop = () => {
     try {
-      // Use requestAnimationFrame to ensure we don't interfere with scroll tracking
       requestAnimationFrame(() => {
         scrollToSection('home');
-
         setTimeout(() => {
           const scrollY = window.scrollY;
           const windowHeight = window.innerHeight;
-
           if (scrollY > windowHeight / 2) {
-            window.scrollTo({
-              top: 0,
-              behavior: 'smooth'
-            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }
         }, 100);
       });
     } catch (error) {
-      // Removed console.error
-      // Direct fallback if the primary method throws an error
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  // State for entries
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Animation configuration
   const { ref: animationRef, inView: animationInView } = useInView({
     threshold: isMobile ? 0.05 : 0.1,
-    triggerOnce: true
+    triggerOnce: true,
   });
 
-  // Combine refs for both registration and animation
-  const setRefs = element => {
+  const setRefs = (element) => {
     sectionRef.current = element;
     if (typeof animationRef === 'function') {
       animationRef(element);
@@ -83,10 +64,10 @@ const Guestbook = ({ registerWithURL }) => {
     visible: {
       opacity: 1,
       transition: {
-        when: "beforeChildren",
-        staggerChildren: isMobile ? 0.07 : 0.1
-      }
-    }
+        when: 'beforeChildren',
+        staggerChildren: isMobile ? 0.07 : 0.1,
+      },
+    },
   };
 
   const itemVariants = {
@@ -94,60 +75,94 @@ const Guestbook = ({ registerWithURL }) => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: isMobile ? 0.3 : 0.4 }
-    }
+      transition: { duration: isMobile ? 0.3 : 0.4 },
+    },
   };
 
-  // Fetch entries on component mount
   useEffect(() => {
     const getEntries = async () => {
       try {
         const data = await fetchGuestbookEntries();
         setEntries(data);
       } catch (err) {
-        // Removed console.error
-        setError(currentGuestbookText.errorMessage || 'Failed to load guestbook entries. Please try again later.');
+        setError(
+          currentGuestbookText.errorMessage ||
+            'Failed to load guestbook entries. Please try again later.'
+        );
       } finally {
         setLoading(false);
       }
     };
-
     getEntries();
-  }, [currentLanguage]);
+  }, [currentLanguage, currentGuestbookText.errorMessage]);
 
-  // Handle new entry submissions
   const handleEntryAdded = (newEntry) => {
-    setEntries(prevEntries => [newEntry, ...prevEntries]);
+    setEntries((prevEntries) => [newEntry, ...prevEntries]);
   };
 
-  // Removed logging useEffect for scroll interactions
+  // Define HORIZONTAL_OFFSET based on your lines.jsx, default to 80px if not available
+  const HORIZONTAL_OFFSET_VALUE = '80px'; // Matching your lines.jsx
 
   return (
-    // Existing skyline-cloak wrapper
-    <div className="skyline-cloak">
-      {/* Corner lines wrapper removed from here */}
+    <div className="relative">
+      {/* Vertical Lines component - ensure sectionRef is passed */}
+      <VerticalLines sectionRef={sectionRef} />
 
-      {/* Existing section element */}
-      <section
-          ref={setRefs}
-          id="guestbook"
-          data-section="guestbook"
-          // UPDATED: Use theme background variables
-          className="py-12 sm:py-16 bg-background dark:bg-dark-background min-h-screen relative"
-          style={{
-            position: 'relative',
-            scrollMarginTop: '120px',
-            scrollBehavior: 'smooth', // Ensure smooth scrolling
-            // ADDED: Use CSS variable for padding
-            paddingLeft: 'var(--section-padding-x)',
-            paddingRight: 'var(--section-padding-x)',
-          }}
+      {/* Skyline cloak wrapper */}
+      <div
+        className="skyline-cloak fixed bottom-0 left-0 right-0 overflow-hidden pointer-events-none"
+        style={{
+          zIndex: 5, // Should be between lines (Z_INDEX=1 in lines.jsx) and content (zIndex=10 for section)
+          height: '30vh',
+          width: '100vw',
+        }}
       >
-        {/* Add invisible triggers at start and end */}
-        <SectionTriggers sectionId="guestbook" />
+        <div
+          className="skyline-layer absolute bottom-0 left-0 right-0"
+          style={{
+            height: '100%',
+            backgroundImage: isDarkMode
+              ? 'url(/Parallax/dark/7.png)'
+              : 'url(/Parallax/light/7.png)',
+            backgroundSize: '100% auto',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'repeat-x',
+            opacity: 0.7,
+          }}
+        />
+        <div
+          className="skyline-layer absolute bottom-0 left-0 right-0"
+          style={{
+            height: '100%',
+            backgroundImage: isDarkMode
+              ? 'url(/Parallax/dark/6.png)'
+              : 'url(/Parallax/light/6.png)',
+            backgroundSize: '100% auto',
+            backgroundPosition: 'center bottom',
+            backgroundRepeat: 'repeat-x',
+            opacity: 0.5,
+          }}
+        />
+      </div>
 
-        {/* Single section marker for visibility */}
-        <div id="guestbook-visibility-center"
+      <section
+        ref={setRefs}
+        id="guestbook"
+        data-section="guestbook"
+        className="py-12 sm:py-16 bg-background dark:bg-dark-background min-h-screen relative"
+        style={{
+          position: 'relative',
+          scrollMarginTop: '120px',
+          scrollBehavior: 'smooth',
+          // Adjust padding to account for HORIZONTAL_OFFSET from lines.jsx
+          paddingLeft: `calc(var(--section-padding-x) + ${HORIZONTAL_OFFSET_VALUE})`,
+          paddingRight: `calc(var(--section-padding-x) + ${HORIZONTAL_OFFSET_VALUE})`,
+          zIndex: 10, // Ensure content is above the fixed vertical lines (Z_INDEX=1 in lines.jsx)
+        }}
+      >
+        <SectionTriggers sectionId="guestbook" />
+        <div
+          id="guestbook-visibility-center"
           style={{
             position: 'absolute',
             top: '50%',
@@ -155,28 +170,31 @@ const Guestbook = ({ registerWithURL }) => {
             width: '100%',
             height: '100px',
             pointerEvents: 'none',
-            zIndex: -1
+            zIndex: -1, // Keep behind everything
           }}
         />
 
-        {/* UPDATED: Removed px-* classes, container-narrow handles max-width */}
-        <div className={`container-narrow mx-auto`}>
-          {/* Form with heading/intro */}
-          {/* Assuming GuestbookForm uses theme variables internally */}
+        {/* Main Content Container with responsive width */}
+        <div
+          className={`mx-auto relative w-full px-4 
+                      sm:max-w-xl 
+                      md:max-w-2xl 
+                      lg:max-w-3xl 
+                      xl:max-w-4xl 
+                      2xl:max-w-5xl`} // Responsive max-width
+          style={{ zIndex: 2 }} // Ensure this is above lines if lines have zIndex >= 1
+        >
           <GuestbookForm
             onEntryAdded={handleEntryAdded}
             isMobile={isMobile}
             guestbookText={currentGuestbookText}
           />
-
-          {/* Entries list component - use hide-scrollbar class for any scrollable container */}
-          <div className="entries-container">
-            {/* Assuming GuestbookEntryList uses theme variables internally */}
+          <div className="entries-container mt-8"> {/* Added margin-top for spacing */}
             <GuestbookEntryList
               entries={entries}
               loading={loading}
               error={error}
-              animationRef={animationRef}
+              animationRef={animationRef} // This ref is for the list animation, not the section
               animationInView={animationInView}
               containerVariants={containerVariants}
               itemVariants={itemVariants}
@@ -186,30 +204,39 @@ const Guestbook = ({ registerWithURL }) => {
           </div>
         </div>
 
-        {/* Back to top button - ensure it doesn't interfere with scrolling */}
-        <div className="flex justify-center mt-12">
+        <div
+          className="flex justify-center mt-12 relative"
+          style={{ zIndex: 2 }} // Ensure this is above lines
+        >
           <button
             onClick={handleScrollToTop}
-            // UPDATED: Use theme primary color and text color
-            className="rounded-full bg-primary hover:bg-primary/90 text-white dark:text-dark-background py-2 px-6
-                      transition-colors duration-300 inline-flex items-center gap-2"
+            className="rounded-full bg-primary hover:bg-primary/90 text-white dark:text-dark-background py-2 px-6 transition-colors duration-300 inline-flex items-center gap-2"
             aria-label="Back to top"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m18 15-6-6-6 6"/>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m18 15-6-6-6 6" />
             </svg>
-            {currentGuestbookText.backToTop || "Back to top"}
+            {currentGuestbookText.backToTop || 'Back to top'}
           </button>
         </div>
 
-        {/* Bottom marker for consistent spacing */}
         <div
           className="w-full h-8"
           id="guestbook-end-marker"
           aria-hidden="true"
         />
       </section>
-    </div> // End of skyline-cloak wrapper
+    </div>
   );
 };
 

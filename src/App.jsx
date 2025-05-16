@@ -128,51 +128,10 @@ const RootLayout = () => {
           Skip to content
         </a>
 
-        {/* Global vertical lines - FIXED FOR CORRECT LAYERING */}
-        <div 
-          className="fixed top-0 left-0 w-full h-full pointer-events-none"
-          style={{ 
-            zIndex: 1, // REDUCED: Much lower than content
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-          }}
-          aria-hidden="true"
-        >
-          <div 
-            className="vertical-line left"
-            style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              left: '10vw',
-              width: '2px',
-              backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
-              height: '100%',
-              boxShadow: theme === 'dark' ? '0 0 8px rgba(255,255,255,0.1)' : '0 0 8px rgba(0,0,0,0.1)',
-            }}
-          />
-          <div 
-            className="vertical-line right"
-            style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              right: '10vw',
-              width: '2px',
-              backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)',
-              height: '100%',
-              boxShadow: theme === 'dark' ? '0 0 8px rgba(255,255,255,0.1)' : '0 0 8px rgba(0,0,0,0.1)',
-            }}
-          />
-        </div>
-
         {/* Main application structure */}
         <div 
           className={`flex flex-col transition-colors duration-300 min-h-screen ${pageReady ? 'page-ready' : 'page-loading'}`}
-          style={{ position: 'relative', zIndex: 10 }} // Keep this above the lines
+          style={{ position: 'relative', zIndex: 10 }}
         >
           {/* Header - Remains at highest z-index */}
           <div className="relative" style={{ zIndex: 300 }}> 
@@ -183,7 +142,7 @@ const RootLayout = () => {
           <main 
             id="main-content" 
             className="flex-grow container-wide mx-auto py-6 pt-20 relative" 
-            style={{ zIndex: 50 }} // INCREASED: Much higher than lines
+            style={{ zIndex: 50 }}
           >
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[60vh]">
@@ -203,7 +162,7 @@ const RootLayout = () => {
             position: 'fixed',
             left: 0,
             width: '100%',
-            zIndex: -100, // INCREASED: Absolutely highest
+            zIndex: -100,
             transition: 'background-color 0.3s ease-in-out',
             ...cloakStyle,
           }}
